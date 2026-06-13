@@ -1,0 +1,55 @@
+# Vivado / Xilinx generated files
+Projects/
+bin/
+SimulationLib/
+.Xil/
+*.jou
+*.log
+*.str
+*.tmp
+*.bit
+*.bin
+*.dcp
+*.rpt
+*.rpx
+*.wdb
+*.wcfg
+*.pb
+*.cache/
+*.runs/
+*.hw/
+*.ip_user_files/
+*.sim/
+*.srcs/
+*.gen/
+*.xpr
+*.os
+
+# Vitis / Vitis HLS generated files
+.vitis/
+.vitis_hls/
+Debug/
+Release/
+*.elf
+*.map
+*.o
+*.a
+*.lo
+*.la
+
+# Waveforms and simulation outputs
+*.vcd
+*.fst
+*.ghw
+sim/output/
+sim/work/
+
+# Editor / OS files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# VSCode local workspace state
+.vscode/*.log

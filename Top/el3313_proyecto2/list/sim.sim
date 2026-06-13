@@ -1,0 +1,4 @@
+# Simulation sources
+# Paths must be relative to repository root.
+
+# sim/tb/tb_el3313_proyecto2_top.v

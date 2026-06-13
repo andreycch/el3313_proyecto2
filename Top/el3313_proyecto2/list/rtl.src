@@ -1,0 +1,18 @@
+# RTL sources for el3313_proyecto2
+# Paths must be relative to repository root.
+
+# Top
+src/rtl/top/el3313_proyecto2_top.v top=el3313_proyecto2_top
+
+# Video
+# src/rtl/video/vga_timing.v
+# src/rtl/video/vga_controller.v
+# src/rtl/video/pong_static_renderer.v
+
+# Memory / VRAM
+# src/rtl/memory/vram_dual_port.v
+
+# I/O
+# src/rtl/io/reset_synchronizer.v
+# src/rtl/io/debouncer.v
+# src/rtl/io/edge_detector.v
