@@ -6,6 +6,7 @@ sim/tb/tb_el3313_proyecto2_top.v
 
 # Video
 sim/tb/tb_vga_timing.v
+sim/tb/tb_pixel_tick_gen.v
 
 # Memory / VRAM
 
