@@ -5,7 +5,7 @@
 src/rtl/top/el3313_proyecto2_top.v top=el3313_proyecto2_top
 
 # Video
-# src/rtl/video/vga_timing.v
+src/rtl/video/vga_timing.v
 # src/rtl/video/vga_controller.v
 # src/rtl/video/pong_static_renderer.v
 

@@ -1,4 +1,12 @@
 # Simulation sources
 # Paths must be relative to repository root.
 
-# sim/tb/tb_el3313_proyecto2_top.v
+# Top
+sim/tb/tb_el3313_proyecto2_top.v
+
+# Video
+sim/tb/tb_vga_timing.v
+
+# Memory / VRAM
+
+# I/O
