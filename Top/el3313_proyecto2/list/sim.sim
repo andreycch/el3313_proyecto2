@@ -3,6 +3,7 @@
 
 # Top
 sim/tb/tb_el3313_proyecto2_top.v
+sim/tb/tb_video_vram_axi_core.v
 
 # Video
 sim/tb/tb_vga_timing.v

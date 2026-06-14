@@ -3,6 +3,7 @@
 
 # Top
 src/rtl/top/el3313_proyecto2_top.v top=el3313_proyecto2_top
+src/rtl/top/video_vram_axi_core.v
 
 # Video
 src/rtl/video/vga_timing.v
