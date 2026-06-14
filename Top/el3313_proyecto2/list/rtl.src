@@ -13,6 +13,7 @@ src/rtl/video/pong_static_renderer.v
 # Memory / VRAM
 src/rtl/memory/vram_dual_port.v
 src/rtl/memory/vram_read_addr_gen.v
+src/rtl/memory/vram_test_pattern_writer.v
 
 # I/O
 # src/rtl/io/reset_synchronizer.v
