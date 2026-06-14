@@ -10,5 +10,6 @@ sim/tb/tb_pixel_tick_gen.v
 sim/tb/tb_pong_static_renderer.v
 
 # Memory / VRAM
+sim/tb/tb_vram_dual_port.v
 
 # I/O
