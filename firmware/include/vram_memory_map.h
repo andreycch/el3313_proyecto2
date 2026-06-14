@@ -2,16 +2,19 @@
 #define VRAM_MEMORY_MAP_H
 
 #include <stdint.h>
+#include <stddef.h>
+
+#ifdef XPAR_VIDEO_VRAM_AXI_CORE_0_BASEADDR
+#define VRAM_BASE_ADDR          ((uintptr_t)XPAR_VIDEO_VRAM_AXI_CORE_0_BASEADDR)
+#else
+#define VRAM_BASE_ADDR          ((uintptr_t)0x00020000u)
+#endif
 
 #define VRAM_LOGICAL_WIDTH      160u
 #define VRAM_LOGICAL_HEIGHT     120u
 #define VRAM_PIXEL_COUNT        (VRAM_LOGICAL_WIDTH * VRAM_LOGICAL_HEIGHT)
 
 #define VRAM_PIXEL_BYTES        4u
-
-#ifndef VRAM_BASE_ADDR
-#define VRAM_BASE_ADDR          0x44A00000u
-#endif
 
 #define VRAM_RGB444(red, green, blue) \
     ((((uint16_t)(red)   & 0xFu) << 8) | \
@@ -36,36 +39,36 @@ static inline uint32_t vram_is_valid_coordinate(uint32_t x, uint32_t y)
     return (x < VRAM_LOGICAL_WIDTH) && (y < VRAM_LOGICAL_HEIGHT);
 }
 
-static inline void vram_write_pixel(uint32_t base_addr, uint32_t x, uint32_t y, uint16_t rgb444)
+static inline void vram_write_pixel(uint32_t x, uint32_t y, uint16_t rgb444)
 {
-    if (vram_is_valid_coordinate(x, y)) {
-        volatile uint32_t *pixel_addr;
+    uintptr_t pixel_addr;
 
-        pixel_addr = (volatile uint32_t *)(base_addr + VRAM_PIXEL_OFFSET(x, y));
-        *pixel_addr = ((uint32_t)rgb444) & 0x00000FFFu;
+    if (vram_is_valid_coordinate(x, y)) {
+        pixel_addr = VRAM_BASE_ADDR + (uintptr_t)VRAM_PIXEL_OFFSET(x, y);
+        *((volatile uint32_t *)pixel_addr) = ((uint32_t)rgb444) & 0x00000FFFu;
     }
 }
 
-static inline uint32_t vram_read_pixel(uint32_t base_addr, uint32_t x, uint32_t y)
+static inline uint32_t vram_read_pixel(uint32_t x, uint32_t y)
 {
-    if (vram_is_valid_coordinate(x, y)) {
-        volatile uint32_t *pixel_addr;
+    uintptr_t pixel_addr;
 
-        pixel_addr = (volatile uint32_t *)(base_addr + VRAM_PIXEL_OFFSET(x, y));
-        return (*pixel_addr) & 0x00000FFFu;
+    if (vram_is_valid_coordinate(x, y)) {
+        pixel_addr = VRAM_BASE_ADDR + (uintptr_t)VRAM_PIXEL_OFFSET(x, y);
+        return (*((volatile uint32_t *)pixel_addr)) & 0x00000FFFu;
     }
 
     return 0u;
 }
 
-static inline void vram_clear(uint32_t base_addr, uint16_t rgb444)
+static inline void vram_clear(uint16_t rgb444)
 {
     uint32_t x;
     uint32_t y;
 
     for (y = 0u; y < VRAM_LOGICAL_HEIGHT; y++) {
         for (x = 0u; x < VRAM_LOGICAL_WIDTH; x++) {
-            vram_write_pixel(base_addr, x, y, rgb444);
+            vram_write_pixel(x, y, rgb444);
         }
     }
 }
