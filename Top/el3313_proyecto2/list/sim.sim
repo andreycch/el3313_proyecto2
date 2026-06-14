@@ -15,4 +15,7 @@ sim/tb/tb_vram_read_addr_gen.v
 sim/tb/tb_vram_test_pattern_writer.v
 sim/tb/tb_vram_cpu_write_adapter.v
 
+#AXI
+sim/tb/tb_axi_lite_vram_writer.v
+
 # I/O

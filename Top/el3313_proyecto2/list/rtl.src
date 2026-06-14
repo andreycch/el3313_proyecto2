@@ -16,6 +16,9 @@ src/rtl/memory/vram_read_addr_gen.v
 src/rtl/memory/vram_test_pattern_writer.v
 src/rtl/memory/vram_cpu_write_adapter.v
 
+#AXI
+src/rtl/axi/axi_lite_vram_writer.v
+
 # I/O
 # src/rtl/io/reset_synchronizer.v
 # src/rtl/io/debouncer.v
