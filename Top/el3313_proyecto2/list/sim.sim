@@ -13,5 +13,6 @@ sim/tb/tb_pong_static_renderer.v
 sim/tb/tb_vram_dual_port.v
 sim/tb/tb_vram_read_addr_gen.v
 sim/tb/tb_vram_test_pattern_writer.v
+sim/tb/tb_vram_cpu_write_adapter.v
 
 # I/O
