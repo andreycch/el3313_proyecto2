@@ -52,4 +52,4 @@ Thumbs.db
 *~
 
 # VSCode local workspace state
-.vscode/*.log
+.vscode/*.logfirmware/workspace/
