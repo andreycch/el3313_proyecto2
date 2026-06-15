@@ -36,6 +36,7 @@ Release/
 *.a
 *.lo
 *.la
+firmware/workspace/
 
 # Waveforms and simulation outputs
 *.vcd
@@ -52,4 +53,4 @@ Thumbs.db
 *~
 
 # VSCode local workspace state
-.vscode/*.logfirmware/workspace/
+.vscode/*.log
