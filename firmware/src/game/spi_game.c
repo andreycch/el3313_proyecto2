@@ -1,115 +1,210 @@
+#include <stdint.h>
+#include <string.h>
+
+#include "xparameters.h"
+#include "xspi.h"
+#include "xstatus.h"
+
 #include "game/spi_game.h"
 #include "game/game_packet.h"
 
-/*
- * Temporary SPI stub buffers.
- *
- * These variables simulate what would travel through SPI.
- * In the final hardware version, this section will be replaced by SPI
- * transmit and receive functions from Vitis.
- */
-static game_input_packet_t spi_stub_input_packet;
-static game_state_packet_t spi_stub_state_packet;
+#define SPI_GAME_SS_MASK 0x01U
 
-static uint8_t spi_stub_input_available = 0;
-static uint8_t spi_stub_state_available = 0;
+static XSpi spi_instance;
+static uint8_t spi_initialized = 0U;
 
-/*
- * Clears the temporary SPI stub buffers.
- */
-void spi_game_stub_clear(void)
+static int spi_game_init_hw(void)
 {
-    spi_stub_input_available = 0;
-    spi_stub_state_available = 0;
+    int status;
+
+    if (spi_initialized != 0U) {
+        return XST_SUCCESS;
+    }
+
+#ifdef SDT
+    XSpi_Config *config;
+
+    config = XSpi_LookupConfig((UINTPTR)XPAR_XSPI_0_BASEADDR);
+    if (config == NULL) {
+        return XST_FAILURE;
+    }
+
+    status = XSpi_CfgInitialize(&spi_instance, config, config->BaseAddress);
+    if (status != XST_SUCCESS) {
+        return status;
+    }
+#else
+    status = XSpi_Initialize(&spi_instance, XPAR_XSPI_0_DEVICE_ID);
+    if (status != XST_SUCCESS) {
+        return status;
+    }
+#endif
+
+    status = XSpi_SetOptions(
+        &spi_instance,
+        XSP_MASTER_OPTION | XSP_MANUAL_SSELECT_OPTION
+    );
+
+    if (status != XST_SUCCESS) {
+        return status;
+    }
+
+    XSpi_Start(&spi_instance);
+    XSpi_IntrGlobalDisable(&spi_instance);
+
+    status = XSpi_SetSlaveSelect(&spi_instance, SPI_GAME_SS_MASK);
+    if (status != XST_SUCCESS) {
+        return status;
+    }
+
+    spi_initialized = 1U;
+
+    return XST_SUCCESS;
 }
 
-/*
- * Sends a player input packet through the SPI game link.
- *
- * Stub behavior:
- * stores the packet in a temporary memory buffer.
- */
+static uint8_t spi_game_transfer_bytes(
+    const uint8_t *tx_buffer,
+    uint8_t *rx_buffer,
+    uint32_t length
+)
+{
+    int status;
+
+    if ((tx_buffer == NULL) || (rx_buffer == NULL) || (length == 0U)) {
+        return 0U;
+    }
+
+    status = spi_game_init_hw();
+    if (status != XST_SUCCESS) {
+        return 0U;
+    }
+
+    status = XSpi_SetSlaveSelect(&spi_instance, SPI_GAME_SS_MASK);
+    if (status != XST_SUCCESS) {
+        return 0U;
+    }
+
+    status = XSpi_Transfer(
+        &spi_instance,
+        (uint8_t *)tx_buffer,
+        rx_buffer,
+        length
+    );
+
+    if (status != XST_SUCCESS) {
+        return 0U;
+    }
+
+    return 1U;
+}
+
+void spi_game_stub_clear(void)
+{
+    spi_initialized = 0U;
+}
+
 void spi_game_send_player_input(
     player_input_t input,
     uint8_t frame_id
 )
 {
+    game_input_packet_t packet;
+    uint8_t rx_dummy[sizeof(game_input_packet_t)];
+
     game_packet_build_input(
-        &spi_stub_input_packet,
+        &packet,
         input,
         frame_id
     );
 
-    spi_stub_input_available = 1;
+    (void)spi_game_transfer_bytes(
+        (const uint8_t *)&packet,
+        rx_dummy,
+        sizeof(game_input_packet_t)
+    );
 }
 
-/*
- * Receives a player input packet from the SPI game link.
- *
- * Stub behavior:
- * reads the temporary memory buffer and validates its checksum.
- */
 uint8_t spi_game_receive_player_input(
     player_input_t *input
 )
 {
-    if (!spi_stub_input_available) {
-        return 0;
+    game_input_packet_t packet;
+    uint8_t tx_dummy[sizeof(game_input_packet_t)];
+
+    if (input == NULL) {
+        return 0U;
     }
 
-    if (!game_packet_validate_input(&spi_stub_input_packet)) {
-        spi_stub_input_available = 0;
-        return 0;
+    memset(tx_dummy, 0x00, sizeof(tx_dummy));
+    memset(&packet, 0x00, sizeof(packet));
+
+    if (!spi_game_transfer_bytes(
+            tx_dummy,
+            (uint8_t *)&packet,
+            sizeof(game_input_packet_t)
+        )) {
+        return 0U;
     }
 
-    *input = game_packet_decode_input(&spi_stub_input_packet);
+    if (!game_packet_validate_input(&packet)) {
+        return 0U;
+    }
 
-    spi_stub_input_available = 0;
+    *input = game_packet_decode_input(&packet);
 
-    return 1;
+    return 1U;
 }
 
-/*
- * Sends the official game state through the SPI game link.
- *
- * Stub behavior:
- * stores the packet in a temporary memory buffer.
- */
 void spi_game_send_state(
     const game_state_t *state
 )
 {
+    game_state_packet_t packet;
+    uint8_t rx_dummy[sizeof(game_state_packet_t)];
+
+    if (state == NULL) {
+        return;
+    }
+
     game_packet_build_state(
-        &spi_stub_state_packet,
+        &packet,
         state
     );
 
-    spi_stub_state_available = 1;
+    (void)spi_game_transfer_bytes(
+        (const uint8_t *)&packet,
+        rx_dummy,
+        sizeof(game_state_packet_t)
+    );
 }
 
-/*
- * Receives the official game state through the SPI game link.
- *
- * Stub behavior:
- * reads the temporary memory buffer, validates its checksum,
- * and applies the received packet to a game_state_t structure.
- */
 uint8_t spi_game_receive_state(
     game_state_t *state
 )
 {
-    if (!spi_stub_state_available) {
-        return 0;
+    game_state_packet_t packet;
+    uint8_t tx_dummy[sizeof(game_state_packet_t)];
+
+    if (state == NULL) {
+        return 0U;
     }
 
-    if (!game_packet_validate_state(&spi_stub_state_packet)) {
-        spi_stub_state_available = 0;
-        return 0;
+    memset(tx_dummy, 0x00, sizeof(tx_dummy));
+    memset(&packet, 0x00, sizeof(packet));
+
+    if (!spi_game_transfer_bytes(
+            tx_dummy,
+            (uint8_t *)&packet,
+            sizeof(game_state_packet_t)
+        )) {
+        return 0U;
     }
 
-    game_packet_apply_state(state, &spi_stub_state_packet);
+    if (!game_packet_validate_state(&packet)) {
+        return 0U;
+    }
 
-    spi_stub_state_available = 0;
+    game_packet_apply_state(state, &packet);
 
-    return 1;
+    return 1U;
 }
