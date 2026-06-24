@@ -6,69 +6,57 @@
 #include "player_input.h"
 #include "game_state.h"
 
+#define SPI_GAME_INPUT_WIRE_BYTES  7U
+#define SPI_GAME_STATE_WIRE_BYTES  24U
+#define SPI_GAME_FRAME_WIRE_BYTES  SPI_GAME_STATE_WIRE_BYTES
+
 /*
  * SPI game communication layer.
  *
- * This module is a temporary stub.
- * It defines the functions that will later be connected to the real SPI
- * driver in Vitis/MicroBlaze.
+ * Master FPGA:
+ * - owns the official Pong state
+ * - sends game state through MOSI
+ * - receives remote player input through MISO
  *
- * Communication idea:
- *
- * Slave FPGA -> Master FPGA:
- * player 2 input
- *
- * Master FPGA -> Slave FPGA:
- * official game state
+ * Slave FPGA:
+ * - reads remote controls
+ * - sends player 2 input through MISO
+ * - receives official state through MOSI
  */
 
-/*
- * Sends a player input packet through the SPI game link.
- *
- * In the final FPGA version, this function will transmit bytes using
- * the SPI peripheral.
- */
 void spi_game_send_player_input(
     player_input_t input,
     uint8_t frame_id
 );
 
-/*
- * Receives a player input packet from the SPI game link.
- *
- * Returns:
- * 1 = valid input received
- * 0 = no valid input available
- */
 uint8_t spi_game_receive_player_input(
     player_input_t *input
 );
 
-/*
- * Sends the official game state through the SPI game link.
- *
- * In the final FPGA version, this function will transmit the state packet
- * using the SPI peripheral.
- */
 void spi_game_send_state(
     const game_state_t *state
 );
 
-/*
- * Receives the official game state through the SPI game link.
- *
- * Returns:
- * 1 = valid state received
- * 0 = no valid state available
- */
 uint8_t spi_game_receive_state(
     game_state_t *state
 );
 
 /*
- * Clears the temporary SPI stub buffers.
- * Useful for tests and initialization.
+ * Main master-side SPI transaction.
+ *
+ * One 24-byte full-duplex transaction:
+ * - MOSI: official game state from master
+ * - MISO: player 2 input from slave in the first 7 bytes
+ *
+ * Returns:
+ * 1 = valid remote input received
+ * 0 = SPI transfer failed or invalid packet
  */
+uint8_t spi_game_exchange_state_input(
+    const game_state_t *state,
+    player_input_t *input
+);
+
 void spi_game_stub_clear(void);
 
 #endif
