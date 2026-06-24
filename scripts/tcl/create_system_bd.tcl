@@ -200,7 +200,7 @@ proc write_mig_file_system_mig_7series_0_0 { str_mig_prj_filepath } {
    puts $mig_prj_file {    <TimePeriod>3077</TimePeriod>}
    puts $mig_prj_file {    <VccAuxIO>1.8V</VccAuxIO>}
    puts $mig_prj_file {    <PHYRatio>4:1</PHYRatio>}
-   puts $mig_prj_file {    <InputClkFreq>99.997</InputClkFreq>}
+   puts $mig_prj_file {    <InputClkFreq>199.995</InputClkFreq>}
    puts $mig_prj_file {    <UIExtraClocks>1</UIExtraClocks>}
    puts $mig_prj_file {    <MMCM_VCO>1200</MMCM_VCO>}
    puts $mig_prj_file {    <MMCMClkOut0> 6.000</MMCMClkOut0>}
@@ -476,9 +476,11 @@ proc create_root_design { parentCell } {
   set clk_wiz_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:clk_wiz:6.0 clk_wiz_1 ]
   set_property -dict [list \
     CONFIG.PRIM_SOURCE {Single_ended_clock_capable_pin} \
+    CONFIG.PRIM_IN_FREQ {100.000} \
+    CONFIG.NUM_OUT_CLKS {2} \
     CONFIG.CLKOUT1_REQUESTED_OUT_FREQ {100.000} \
     CONFIG.CLKOUT2_USED {true} \
-    CONFIG.CLKOUT2_REQUESTED_OUT_FREQ {200.000} \
+    CONFIG.CLKOUT2_REQUESTED_OUT_FREQ {199.995} \
   ] $clk_wiz_1
 
 
@@ -569,8 +571,8 @@ proc create_root_design { parentCell } {
   connect_bd_net -net clk_wiz_1_locked [get_bd_pins clk_wiz_1/locked] [get_bd_pins rst_clk_wiz_1_100M/dcm_locked]
   connect_bd_net -net gpio_io_i_0_1 [get_bd_ports INPUT_DRIVER] [get_bd_pins axi_gpio_0/gpio_io_i]
   connect_bd_net -net mdm_1_debug_sys_rst [get_bd_pins mdm_1/Debug_SYS_Rst] [get_bd_pins rst_clk_wiz_1_100M/mb_debug_sys_rst] [get_bd_pins clk_wiz_1/reset]
-  connect_bd_net -net microblaze_riscv_0_Clk [get_bd_pins clk_wiz_1/clk_out1] [get_bd_pins microblaze_riscv_0/Clk] [get_bd_pins microblaze_riscv_0_local_memory/LMB_Clk] [get_bd_pins rst_clk_wiz_1_100M/slowest_sync_clk] [get_bd_pins microblaze_riscv_0_axi_periph/S00_ACLK] [get_bd_pins video_vram_axi_core_0/S_AXI_ACLK] [get_bd_pins microblaze_riscv_0_axi_periph/M00_ACLK] [get_bd_pins microblaze_riscv_0_axi_periph/ACLK] [get_bd_pins axi_gpio_0/s_axi_aclk] [get_bd_pins microblaze_riscv_0_axi_periph/M01_ACLK] [get_bd_pins mig_7series_0/sys_clk_i] [get_bd_pins axi_quad_spi_0/s_axi_aclk] [get_bd_pins microblaze_riscv_0_axi_periph/M03_ACLK] [get_bd_pins axi_quad_spi_0/ext_spi_clk] [get_bd_pins axi_uartlite_0/s_axi_aclk] [get_bd_pins microblaze_riscv_0_axi_periph/M04_ACLK]
-  connect_bd_net -net clk_wiz_1_clk_out2 [get_bd_pins clk_wiz_1/clk_out2] [get_bd_pins mig_7series_0/clk_ref_i]
+  connect_bd_net -net microblaze_riscv_0_Clk [get_bd_pins clk_wiz_1/clk_out1] [get_bd_pins microblaze_riscv_0/Clk] [get_bd_pins microblaze_riscv_0_local_memory/LMB_Clk] [get_bd_pins rst_clk_wiz_1_100M/slowest_sync_clk] [get_bd_pins microblaze_riscv_0_axi_periph/S00_ACLK] [get_bd_pins video_vram_axi_core_0/S_AXI_ACLK] [get_bd_pins microblaze_riscv_0_axi_periph/M00_ACLK] [get_bd_pins microblaze_riscv_0_axi_periph/ACLK] [get_bd_pins axi_gpio_0/s_axi_aclk] [get_bd_pins microblaze_riscv_0_axi_periph/M01_ACLK] [get_bd_pins axi_quad_spi_0/s_axi_aclk] [get_bd_pins microblaze_riscv_0_axi_periph/M03_ACLK] [get_bd_pins axi_quad_spi_0/ext_spi_clk] [get_bd_pins axi_uartlite_0/s_axi_aclk] [get_bd_pins microblaze_riscv_0_axi_periph/M04_ACLK]
+  connect_bd_net -net clk_wiz_1_clk_out2 [get_bd_pins clk_wiz_1/clk_out2] [get_bd_pins mig_7series_0/sys_clk_i] [get_bd_pins mig_7series_0/clk_ref_i]
   connect_bd_net -net mig_7series_0_mmcm_locked [get_bd_pins mig_7series_0/mmcm_locked] [get_bd_pins rst_mig_7series_0_100M/dcm_locked]
   connect_bd_net -net mig_7series_0_ui_clk [get_bd_pins mig_7series_0/ui_clk] [get_bd_pins microblaze_riscv_0_axi_periph/M02_ACLK] [get_bd_pins rst_mig_7series_0_100M/slowest_sync_clk]
   connect_bd_net -net mig_7series_0_ui_clk_sync_rst [get_bd_pins mig_7series_0/ui_clk_sync_rst] [get_bd_pins rst_mig_7series_0_100M/ext_reset_in]
