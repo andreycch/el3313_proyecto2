@@ -37,7 +37,7 @@ El `axi_interconnect` pasó de dos salidas maestras a cinco:
 | --- | --- | ---: | ---: |
 | `M00_AXI` | `video_vram_axi_core_0` | `0x00020000` | `0x00020000` |
 | `M01_AXI` | `axi_gpio_0` | `0x40000000` | `0x00010000` |
-| `M02_AXI` | `mig_7series_0` | `0x80000000` | `0x10000000` |
+| `M02_AXI` | `mig_7series_0` | `0x80000000` | `0x08000000` |
 | `M03_AXI` | `axi_quad_spi_0` | `0x44A00000` | `0x00010000` |
 | `M04_AXI` | `axi_uartlite_0` | `0x40600000` | `0x00010000` |
 

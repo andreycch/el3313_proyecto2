@@ -192,18 +192,18 @@ proc write_mig_file_system_mig_7series_0_0 { str_mig_prj_filepath } {
    puts $mig_prj_file {  <ReferenceClock>No Buffer</ReferenceClock>}
    puts $mig_prj_file {  <SysResetPolarity>ACTIVE LOW</SysResetPolarity>}
    puts $mig_prj_file {  <BankSelectionFlag>TRUE</BankSelectionFlag>}
-   puts $mig_prj_file {  <InternalVref>0</InternalVref>}
+   puts $mig_prj_file {  <InternalVref>1</InternalVref>}
    puts $mig_prj_file {  <dci_hr_inouts_inputs>50 Ohms</dci_hr_inouts_inputs>}
    puts $mig_prj_file {  <dci_cascade>0</dci_cascade>}
    puts $mig_prj_file {  <Controller number="0">}
-   puts $mig_prj_file {    <MemoryDevice>DDR2_SDRAM/Components/MT47H128M16XX-25E</MemoryDevice>}
-   puts $mig_prj_file {    <TimePeriod>2500</TimePeriod>}
+   puts $mig_prj_file {    <MemoryDevice>DDR2_SDRAM/Components/MT47H64M16HR-25E</MemoryDevice>}
+   puts $mig_prj_file {    <TimePeriod>3077</TimePeriod>}
    puts $mig_prj_file {    <VccAuxIO>1.8V</VccAuxIO>}
    puts $mig_prj_file {    <PHYRatio>4:1</PHYRatio>}
-   puts $mig_prj_file {    <InputClkFreq>400</InputClkFreq>}
-   puts $mig_prj_file {    <UIExtraClocks>0</UIExtraClocks>}
-   puts $mig_prj_file {    <MMCM_VCO>1600</MMCM_VCO>}
-   puts $mig_prj_file {    <MMCMClkOut0> 1.000</MMCMClkOut0>}
+   puts $mig_prj_file {    <InputClkFreq>99.997</InputClkFreq>}
+   puts $mig_prj_file {    <UIExtraClocks>1</UIExtraClocks>}
+   puts $mig_prj_file {    <MMCM_VCO>1200</MMCM_VCO>}
+   puts $mig_prj_file {    <MMCMClkOut0> 6.000</MMCMClkOut0>}
    puts $mig_prj_file {    <MMCMClkOut1>1</MMCMClkOut1>}
    puts $mig_prj_file {    <MMCMClkOut2>1</MMCMClkOut2>}
    puts $mig_prj_file {    <MMCMClkOut3>1</MMCMClkOut3>}
@@ -216,10 +216,10 @@ proc write_mig_file_system_mig_7series_0_0 { str_mig_prj_filepath } {
    puts $mig_prj_file {    <BankMachineCnt>4</BankMachineCnt>}
    puts $mig_prj_file {    <CustomPart>FALSE</CustomPart>}
    puts $mig_prj_file {    <NewPartName/>}
-   puts $mig_prj_file {    <RowAddress>14</RowAddress>}
+   puts $mig_prj_file {    <RowAddress>13</RowAddress>}
    puts $mig_prj_file {    <ColAddress>10</ColAddress>}
    puts $mig_prj_file {    <BankAddress>3</BankAddress>}
-   puts $mig_prj_file {    <C0_MEM_SIZE>268435456</C0_MEM_SIZE>}
+   puts $mig_prj_file {    <C0_MEM_SIZE>134217728</C0_MEM_SIZE>}
    puts $mig_prj_file {    <UserMemoryAddressMap>BANK_ROW_COLUMN</UserMemoryAddressMap>}
    puts $mig_prj_file {    <BankSelection>}
    puts $mig_prj_file {      <Bank T0="Address/Ctrl-0" T1="Address/Ctrl-1" T2="Address/Ctrl-2" T3="DQ[0-7]" name="35"/>}
@@ -239,12 +239,12 @@ proc write_mig_file_system_mig_7series_0_0 { str_mig_prj_filepath } {
    puts $mig_prj_file {    <mrMode name="Mode">Normal</mrMode>}
    puts $mig_prj_file {    <mrDllReset name="DLL Reset">No</mrDllReset>}
    puts $mig_prj_file {    <mrPdMode name="PD Mode">Fast exit</mrPdMode>}
-   puts $mig_prj_file {    <mrWriteRecovery name="Write Recovery">6</mrWriteRecovery>}
+   puts $mig_prj_file {    <mrWriteRecovery name="Write Recovery">5</mrWriteRecovery>}
    puts $mig_prj_file {    <emrDllEnable name="DLL Enable">Enable-Normal</emrDllEnable>}
    puts $mig_prj_file {    <emrOutputDriveStrength name="Output Drive Strength">Fullstrength</emrOutputDriveStrength>}
    puts $mig_prj_file {    <emrCSSelection name="Controller Chip Select Pin">Enable</emrCSSelection>}
    puts $mig_prj_file {    <emrCKSelection name="Memory Clock Selection">1</emrCKSelection>}
-   puts $mig_prj_file {    <emrRTT name="RTT (nominal) - ODT">75ohms</emrRTT>}
+   puts $mig_prj_file {    <emrRTT name="RTT (nominal) - ODT">50ohms</emrRTT>}
    puts $mig_prj_file {    <emrPosted name="Additive Latency (AL)">0</emrPosted>}
    puts $mig_prj_file {    <emrOCD name="OCD Operation">OCD Exit</emrOCD>}
    puts $mig_prj_file {    <emrDQS name="DQS# Enable">Enable</emrDQS>}
@@ -253,7 +253,7 @@ proc write_mig_file_system_mig_7series_0_0 { str_mig_prj_filepath } {
    puts $mig_prj_file {    <PortInterface>AXI</PortInterface>}
    puts $mig_prj_file {    <AXIParameters>}
    puts $mig_prj_file {      <C0_C_RD_WR_ARB_ALGORITHM>RD_PRI_REG</C0_C_RD_WR_ARB_ALGORITHM>}
-   puts $mig_prj_file {      <C0_S_AXI_ADDR_WIDTH>28</C0_S_AXI_ADDR_WIDTH>}
+   puts $mig_prj_file {      <C0_S_AXI_ADDR_WIDTH>27</C0_S_AXI_ADDR_WIDTH>}
    puts $mig_prj_file {      <C0_S_AXI_DATA_WIDTH>32</C0_S_AXI_DATA_WIDTH>}
    puts $mig_prj_file {      <C0_S_AXI_ID_WIDTH>4</C0_S_AXI_ID_WIDTH>}
    puts $mig_prj_file {      <C0_S_AXI_SUPPORTS_NARROW_BURST>0</C0_S_AXI_SUPPORTS_NARROW_BURST>}
@@ -530,7 +530,7 @@ proc create_root_design { parentCell } {
   assign_bd_address -offset 0x44A00000 -range 0x00010000 -target_address_space [get_bd_addr_spaces microblaze_riscv_0/Data] [get_bd_addr_segs axi_quad_spi_0/AXI_LITE/Reg] -force
   assign_bd_address -offset 0x40600000 -range 0x00010000 -target_address_space [get_bd_addr_spaces microblaze_riscv_0/Data] [get_bd_addr_segs axi_uartlite_0/S_AXI/Reg] -force
   assign_bd_address -offset 0x00000000 -range 0x00020000 -target_address_space [get_bd_addr_spaces microblaze_riscv_0/Data] [get_bd_addr_segs microblaze_riscv_0_local_memory/dlmb_bram_if_cntlr/SLMB/Mem] -force
-  assign_bd_address -offset 0x80000000 -range 0x10000000 -target_address_space [get_bd_addr_spaces microblaze_riscv_0/Data] [get_bd_addr_segs mig_7series_0/memmap/memaddr] -force
+  assign_bd_address -offset 0x80000000 -range 0x08000000 -target_address_space [get_bd_addr_spaces microblaze_riscv_0/Data] [get_bd_addr_segs mig_7series_0/memmap/memaddr] -force
   assign_bd_address -offset 0x00020000 -range 0x00020000 -target_address_space [get_bd_addr_spaces microblaze_riscv_0/Data] [get_bd_addr_segs video_vram_axi_core_0/S_AXI/reg0] -force
   assign_bd_address -offset 0x00000000 -range 0x00020000 -target_address_space [get_bd_addr_spaces microblaze_riscv_0/Instruction] [get_bd_addr_segs microblaze_riscv_0_local_memory/ilmb_bram_if_cntlr/SLMB/Mem] -force
 

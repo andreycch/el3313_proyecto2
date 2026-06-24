@@ -103,7 +103,7 @@ VRAM_BASE_ADDR = 0x00020000
 | 0x40000000 - 0x4000FFFF | `axi_gpio_0` / entrada `INPUT_DRIVER[7:0]` |
 | 0x40600000 - 0x4060FFFF | `axi_uartlite_0`                           |
 | 0x44A00000 - 0x44A0FFFF | `axi_quad_spi_0`                           |
-| 0x80000000 - 0x8FFFFFFF | `mig_7series_0` / DDR2 externa             |
+| 0x80000000 - 0x87FFFFFF | `mig_7series_0` / DDR2 externa             |
 
 Las direcciones exactas deben consultarse en el `xparameters.h` generado por Vitis después de exportar el nuevo `.xsa`. Normalmente aparecen como macros similares a:
 
