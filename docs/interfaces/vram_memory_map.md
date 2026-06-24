@@ -96,16 +96,22 @@ VRAM_BASE_ADDR = 0x00020000
 
 ## Mapa general de memoria relevante
 
-| Rango                         | Uso                                        |
-| ----------------------------- | ------------------------------------------ |
-| 0x00000000 - 0x0001FFFF       | Memoria local BRAM del MicroBlaze V        |
-| 0x00020000 - 0x0003FFFF       | `video_vram_axi_core_0` / VRAM por AXI     |
-| Dirección asignada por Vivado | `axi_gpio_0` / entrada `INPUT_DRIVER[7:0]` |
+| Rango                   | Uso                                        |
+| ----------------------- | ------------------------------------------ |
+| 0x00000000 - 0x0001FFFF | Memoria local BRAM del MicroBlaze V        |
+| 0x00020000 - 0x0003FFFF | `video_vram_axi_core_0` / VRAM por AXI     |
+| 0x40000000 - 0x4000FFFF | `axi_gpio_0` / entrada `INPUT_DRIVER[7:0]` |
+| 0x40600000 - 0x4060FFFF | `axi_uartlite_0`                           |
+| 0x44A00000 - 0x44A0FFFF | `axi_quad_spi_0`                           |
+| 0x80000000 - 0x8FFFFFFF | `mig_7series_0` / DDR2 externa             |
 
-La dirección exacta del AXI GPIO debe consultarse en el `xparameters.h` generado por Vitis. Normalmente aparece como una macro similar a:
+Las direcciones exactas deben consultarse en el `xparameters.h` generado por Vitis después de exportar el nuevo `.xsa`. Normalmente aparecen como macros similares a:
 
 ```c
 XPAR_AXI_GPIO_0_BASEADDR
+XPAR_AXI_QUAD_SPI_0_BASEADDR
+XPAR_AXI_UARTLITE_0_BASEADDR
+XPAR_MIG_7SERIES_0_BASEADDR
 ```
 
 ## Interfaz INPUT_DRIVER[7:0]
@@ -160,3 +166,6 @@ La integración actual incluye:
 * AXI GPIO de entrada de 8 bits.
 * Puerto externo `INPUT_DRIVER[7:0]`.
 * Salidas VGA `VGA_R`, `VGA_G`, `VGA_B`, `VGA_HS` y `VGA_VS`.
+* MIG DDR2 mapeado en el espacio de datos del procesador.
+* AXI Quad SPI mapeado en el espacio de datos del procesador.
+* AXI UARTLite mapeado en el espacio de datos del procesador.

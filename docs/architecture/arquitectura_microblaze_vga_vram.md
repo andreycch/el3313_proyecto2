@@ -15,6 +15,9 @@ Esta arquitectura forma parte del sistema embebido del proyecto Pong sobre FPGA 
 | `microblaze_riscv_0_axi_periph`   | Interconexión AXI entre MicroBlaze y periféricos             |
 | `video_vram_axi_core_0`           | Núcleo de video con interfaz AXI, VRAM y salida VGA          |
 | `axi_gpio_0`                      | Entrada digital de 8 bits para `INPUT_DRIVER[7:0]`           |
+| `mig_7series_0`                   | Controlador DDR2 externo mediante MIG                        |
+| `axi_quad_spi_0`                  | Periférico SPI para comunicación con la otra FPGA             |
+| `axi_uartlite_0`                  | UARTLite para depuración desde firmware                       |
 | `clk_wiz_1`                       | Generación de reloj interno                                  |
 | `rst_clk_wiz_1_100M`              | Sistema de reset sincronizado                                |
 | `mdm_1`                           | Módulo de depuración para MicroBlaze                         |
@@ -59,6 +62,9 @@ El bus AXI permite que el MicroBlaze acceda a periféricos internos del diseño.
 
 * `video_vram_axi_core_0`, para escribir en la memoria de video.
 * `axi_gpio_0`, para leer las entradas digitales `INPUT_DRIVER[7:0]`.
+* `mig_7series_0`, para acceder a memoria DDR2 externa.
+* `axi_quad_spi_0`, para la comunicación SPI con la otra FPGA.
+* `axi_uartlite_0`, para depuración por UART.
 
 La dirección base de cada periférico es generada por Vivado y queda disponible para el firmware mediante `xparameters.h`.
 
@@ -77,3 +83,5 @@ En la integración actual, estos bits se conectan a switches físicos de la Nexy
 La arquitectura fue probada en hardware real. Se programó la FPGA con el bitstream generado desde el diseño integrado y se cargó un firmware bare-metal en MicroBlaze V. El sistema mostró una escena tipo Pong por VGA, confirmando la integración entre procesador, bus AXI, VRAM y salida VGA.
 
 También se integró el AXI GPIO de 8 bits para permitir entrada digital desde firmware.
+
+En un avance posterior del Block Design se agregaron `mig_7series_0`, `axi_quad_spi_0` y `axi_uartlite_0`. Esa integración prepara el hardware para DDR2, comunicación SPI y depuración UART, pero todavía requiere validar constraints, regenerar bitstream, exportar un nuevo `.xsa` y actualizar la plataforma Vitis.

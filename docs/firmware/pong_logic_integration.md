@@ -78,10 +78,10 @@ El código también acepta `XPAR_INPUT_DRIVER_BASEADDR` o `XPAR_AXI_GPIO_0_BASEA
 
 Este avance no integra todavía:
 
-- SPI real mediante AXI Quad SPI.
-- DDR2 como memoria principal del firmware o datos.
+- Driver real de firmware para AXI Quad SPI.
+- Uso efectivo de DDR2 desde firmware.
 - microSD.
 - Temporizador real de 60 Hz.
 - Renderizado avanzado de texto o sprites.
 
-El SPI incluido en `spi_game.c` conserva el comportamiento de stub y solo define la interfaz que luego deberá conectarse con el periférico real de Vitis.
+El SPI incluido en `spi_game.c` conserva el comportamiento de stub y solo define la interfaz que luego deberá conectarse con el periférico real de Vitis. El Block Design ya quedó preparado para incluir `axi_quad_spi_0`, pero falta regenerar el `.xsa` y reemplazar el stub por llamadas al driver real.
