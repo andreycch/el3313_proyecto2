@@ -1,3 +1,5 @@
+`timescale 1ns / 1ps
+
 /*
  * SPI Game Slave Reference - Verilog
  *
