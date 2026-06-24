@@ -70,8 +70,8 @@ Este avance solo integra los periféricos en el script TCL del Block Design. Tod
 - regenerar el proyecto en Vivado;
 - validar el Block Design;
 - generar wrapper, bitstream y nuevo `.xsa`;
-- confirmar las constraints físicas de `spi_rtl_0` según el conector acordado con el otro grupo;
-- confirmar las constraints físicas de `UART_0` si se decide usar UARTLite externo;
+- las constraints físicas de `spi_rtl_0` fueron fijadas en Pmod JA con orden estándar SPI;
+- las constraints físicas de `UART_0` fueron fijadas en el puente USB-UART integrado;
 - actualizar la plataforma Vitis con el nuevo `.xsa`;
 - reemplazar el stub de `spi_game.c` por un driver real sobre `axi_quad_spi_0`.
 
@@ -87,4 +87,4 @@ MicroBlaze renderiza en VRAM local
 MicroBlaze envía estado oficial al esclavo por SPI
 ```
 
-Este avance no implementa todavía esa comunicación en firmware; solamente deja el periférico SPI en el mapa de memoria del procesador.
+Este avance no implementa todavía esa comunicación en firmware; solamente deja el periférico SPI en el mapa de memoria del procesador y define el conector físico maestro en Pmod JA. El detalle del pinout queda documentado en `docs/interfaces/spi_maestro_pmod_ja.md`.
