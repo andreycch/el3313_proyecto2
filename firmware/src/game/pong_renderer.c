@@ -11,6 +11,9 @@
 #define PONG_COLOR_P2          VRAM_RGB444(0xF, 0xA, 0x0)
 #define PONG_COLOR_BALL        VRAM_COLOR_WHITE
 
+static game_state_t previous_state;
+static uint8_t renderer_initialized = 0U;
+
 static void draw_rect(uint32_t x0, uint32_t y0, uint32_t w, uint32_t h, uint16_t color)
 {
     uint32_t x;
@@ -60,16 +63,52 @@ static void draw_score_bar(uint8_t score, uint32_t x0, uint16_t color)
     }
 }
 
-void pong_render_state(const game_state_t *state)
+static void draw_hud(const game_state_t *state)
 {
-    vram_clear(PONG_COLOR_BACKGROUND);
-
-    draw_border();
-    draw_center_line();
+    draw_rect(50U, 3U, 70U, 8U, PONG_COLOR_BACKGROUND);
+    draw_rect(50U, 18U, 70U, 8U, PONG_COLOR_BACKGROUND);
 
     draw_score_bar(state->score_p1, 58U, PONG_COLOR_P1);
     draw_score_bar(state->score_p2, 92U, PONG_COLOR_P2);
 
+    if (state->status == GAME_WAITING) {
+        draw_rect(68U, 20U, 24U, 3U, PONG_COLOR_DIM);
+    }
+
+    if (state->status == GAME_OVER) {
+        draw_rect(55U, 20U, 50U, 3U, VRAM_COLOR_RED);
+    }
+}
+
+static void erase_dynamic_objects(const game_state_t *state)
+{
+    draw_rect(
+        PADDLE_MARGIN,
+        state->paddle_p1_y,
+        PADDLE_WIDTH,
+        PADDLE_HEIGHT,
+        PONG_COLOR_BACKGROUND
+    );
+
+    draw_rect(
+        GAME_WIDTH - PADDLE_MARGIN - PADDLE_WIDTH,
+        state->paddle_p2_y,
+        PADDLE_WIDTH,
+        PADDLE_HEIGHT,
+        PONG_COLOR_BACKGROUND
+    );
+
+    draw_rect(
+        state->ball_x,
+        state->ball_y,
+        BALL_SIZE,
+        BALL_SIZE,
+        PONG_COLOR_BACKGROUND
+    );
+}
+
+static void draw_dynamic_objects(const game_state_t *state)
+{
     draw_rect(
         PADDLE_MARGIN,
         state->paddle_p1_y,
@@ -93,12 +132,28 @@ void pong_render_state(const game_state_t *state)
         BALL_SIZE,
         PONG_COLOR_BALL
     );
+}
 
-    if (state->status == GAME_WAITING) {
-        draw_rect(68U, 20U, 24U, 3U, PONG_COLOR_DIM);
+void pong_render_state(const game_state_t *state)
+{
+    if (renderer_initialized == 0U) {
+        vram_clear(PONG_COLOR_BACKGROUND);
+        draw_border();
+        draw_center_line();
+        draw_hud(state);
+        draw_dynamic_objects(state);
+
+        previous_state = *state;
+        renderer_initialized = 1U;
+        return;
     }
 
-    if (state->status == GAME_OVER) {
-        draw_rect(55U, 20U, 50U, 3U, VRAM_COLOR_RED);
-    }
+    erase_dynamic_objects(&previous_state);
+
+    draw_border();
+    draw_center_line();
+    draw_hud(state);
+    draw_dynamic_objects(state);
+
+    previous_state = *state;
 }

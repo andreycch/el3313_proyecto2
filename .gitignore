@@ -54,3 +54,7 @@ Thumbs.db
 
 # VSCode local workspace state
 .vscode/*.log
+workspace/
+export_hw/
+*.xsa
+*.bak_*
