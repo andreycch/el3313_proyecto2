@@ -58,3 +58,4 @@ workspace/
 export_hw/
 *.xsa
 *.bak_*
+xsim.dir/
