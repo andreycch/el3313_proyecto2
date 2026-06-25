@@ -11,6 +11,39 @@
 #define PONG_COLOR_P2          VRAM_RGB444(0xF, 0xA, 0x0)
 #define PONG_COLOR_BALL        VRAM_COLOR_WHITE
 
+#define SCREEN_CENTER_LEFT_X   ((GAME_WIDTH / 2U) - 1U)
+#define SCREEN_CENTER_RIGHT_X  (GAME_WIDTH / 2U)
+
+#define CENTER_LINE_WIDTH      2U
+#define CENTER_DASH_HEIGHT     4U
+#define CENTER_DASH_GAP        4U
+#define CENTER_LINE_START_Y    16U
+#define CENTER_LINE_END_Y      (GAME_HEIGHT - 2U)
+
+#define SCORE_BLOCK_WIDTH      3U
+#define SCORE_BLOCK_HEIGHT     5U
+#define SCORE_BLOCK_GAP        2U
+#define SCORE_Y                4U
+#define SCORE_CENTER_GAP       6U
+#define SCORE_MAX_WIDTH        ((MAX_SCORE * SCORE_BLOCK_WIDTH) + ((MAX_SCORE - 1U) * SCORE_BLOCK_GAP))
+
+#define SCORE_P1_X             (SCREEN_CENTER_LEFT_X - SCORE_CENTER_GAP - SCORE_MAX_WIDTH + 1U)
+#define SCORE_P2_X             (SCREEN_CENTER_RIGHT_X + SCORE_CENTER_GAP)
+
+#define HUD_CLEAR_Y            1U
+#define HUD_CLEAR_HEIGHT       15U
+
+#define MESSAGE_CLEAR_Y        17U
+#define MESSAGE_CLEAR_HEIGHT   10U
+
+#define WAIT_BAR_WIDTH         28U
+#define WAIT_BAR_HEIGHT        3U
+#define WAIT_BAR_Y             20U
+
+#define WIN_BAR_WIDTH          64U
+#define WIN_BAR_HEIGHT         3U
+#define WIN_BAR_Y              20U
+
 static game_state_t previous_state;
 static uint8_t renderer_initialized = 0U;
 
@@ -24,6 +57,11 @@ static void draw_rect(uint32_t x0, uint32_t y0, uint32_t w, uint32_t h, uint16_t
             vram_write_pixel(x, y, color);
         }
     }
+}
+
+static void draw_centered_rect(uint32_t y0, uint32_t w, uint32_t h, uint16_t color)
+{
+    draw_rect((GAME_WIDTH - w) / 2U, y0, w, h, color);
 }
 
 static void draw_border(void)
@@ -45,39 +83,101 @@ static void draw_border(void)
 static void draw_center_line(void)
 {
     uint32_t y;
+    uint32_t dash_end;
 
-    for (y = 0U; y < GAME_HEIGHT; y++) {
-        if ((y & 0x04U) == 0U) {
-            vram_write_pixel((GAME_WIDTH / 2U) - 1U, y, PONG_COLOR_DIM);
-            vram_write_pixel((GAME_WIDTH / 2U), y, PONG_COLOR_DIM);
+    for (y = CENTER_LINE_START_Y; y < CENTER_LINE_END_Y; y += (CENTER_DASH_HEIGHT + CENTER_DASH_GAP)) {
+        dash_end = y + CENTER_DASH_HEIGHT;
+
+        if (dash_end > CENTER_LINE_END_Y) {
+            dash_end = CENTER_LINE_END_Y;
         }
+
+        draw_rect(
+            SCREEN_CENTER_LEFT_X,
+            y,
+            CENTER_LINE_WIDTH,
+            dash_end - y,
+            PONG_COLOR_DIM
+        );
     }
+}
+
+static void draw_hud_center_divider(void)
+{
+    draw_rect(
+        SCREEN_CENTER_LEFT_X,
+        2U,
+        CENTER_LINE_WIDTH,
+        10U,
+        PONG_COLOR_DIM
+    );
 }
 
 static void draw_score_bar(uint8_t score, uint32_t x0, uint16_t color)
 {
     uint8_t i;
+    uint32_t x;
+
+    if (score > MAX_SCORE) {
+        score = MAX_SCORE;
+    }
 
     for (i = 0U; i < score; i++) {
-        draw_rect(x0 + ((uint32_t)i * 5U), 4U, 3U, 5U, color);
+        x = x0 + ((uint32_t)i * (SCORE_BLOCK_WIDTH + SCORE_BLOCK_GAP));
+        draw_rect(x, SCORE_Y, SCORE_BLOCK_WIDTH, SCORE_BLOCK_HEIGHT, color);
     }
+}
+
+static uint16_t get_winner_color(const game_state_t *state)
+{
+    if (state->score_p1 >= MAX_SCORE) {
+        return PONG_COLOR_P1;
+    }
+
+    if (state->score_p2 >= MAX_SCORE) {
+        return PONG_COLOR_P2;
+    }
+
+    return PONG_COLOR_FOREGROUND;
 }
 
 static void draw_hud(const game_state_t *state)
 {
-    draw_rect(50U, 3U, 70U, 8U, PONG_COLOR_BACKGROUND);
-    draw_rect(50U, 18U, 70U, 8U, PONG_COLOR_BACKGROUND);
+    draw_rect(1U, HUD_CLEAR_Y, GAME_WIDTH - 2U, HUD_CLEAR_HEIGHT, PONG_COLOR_BACKGROUND);
+    draw_rect(1U, MESSAGE_CLEAR_Y, GAME_WIDTH - 2U, MESSAGE_CLEAR_HEIGHT, PONG_COLOR_BACKGROUND);
 
-    draw_score_bar(state->score_p1, 58U, PONG_COLOR_P1);
-    draw_score_bar(state->score_p2, 92U, PONG_COLOR_P2);
+    draw_score_bar(state->score_p1, SCORE_P1_X, PONG_COLOR_P1);
+    draw_score_bar(state->score_p2, SCORE_P2_X, PONG_COLOR_P2);
+    draw_hud_center_divider();
 
     if (state->status == GAME_WAITING) {
-        draw_rect(68U, 20U, 24U, 3U, PONG_COLOR_DIM);
+        draw_centered_rect(WAIT_BAR_Y, WAIT_BAR_WIDTH, WAIT_BAR_HEIGHT, PONG_COLOR_DIM);
     }
 
     if (state->status == GAME_OVER) {
-        draw_rect(55U, 20U, 50U, 3U, VRAM_COLOR_RED);
+        draw_centered_rect(WIN_BAR_Y, WIN_BAR_WIDTH, WIN_BAR_HEIGHT, get_winner_color(state));
     }
+}
+
+static uint8_t full_redraw_required(const game_state_t *state)
+{
+    if (renderer_initialized == 0U) {
+        return 1U;
+    }
+
+    if (state->score_p1 != previous_state.score_p1) {
+        return 1U;
+    }
+
+    if (state->score_p2 != previous_state.score_p2) {
+        return 1U;
+    }
+
+    if (state->status != previous_state.status) {
+        return 1U;
+    }
+
+    return 0U;
 }
 
 static void erase_dynamic_objects(const game_state_t *state)
@@ -136,8 +236,9 @@ static void draw_dynamic_objects(const game_state_t *state)
 
 void pong_render_state(const game_state_t *state)
 {
-    if (renderer_initialized == 0U) {
+    if (full_redraw_required(state) != 0U) {
         vram_clear(PONG_COLOR_BACKGROUND);
+
         draw_border();
         draw_center_line();
         draw_hud(state);
@@ -150,9 +251,14 @@ void pong_render_state(const game_state_t *state)
 
     erase_dynamic_objects(&previous_state);
 
+    /*
+     * Reparar elementos estáticos que pudieron ser borrados por la bola
+     * o las paletas al pintar fondo negro.
+     */
     draw_border();
     draw_center_line();
     draw_hud(state);
+
     draw_dynamic_objects(state);
 
     previous_state = *state;
