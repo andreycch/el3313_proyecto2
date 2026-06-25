@@ -105,14 +105,19 @@ El código también acepta `XPAR_INPUT_DRIVER_BASEADDR` o `XPAR_AXI_GPIO_0_BASEA
 
 El SPI se maneja mediante el periférico AXI Quad SPI generado por Vivado. En el firmware se inicializa con `XSpi_Initialize`, se configura como maestro y se ejecutan transferencias full-duplex de 24 bytes para intercambiar estado e input remoto.
 
-## Estado pendiente
+## Estado actual y pendientes obligatorios
 
-La integración actual ya valida Pong local, renderizado VGA, controles físicos con debounce y modo multijugador SPI con dos FPGA.
+La integración actual ya valida Pong local, renderizado VGA, controles físicos con sincronización/debounce, reset de partida y modo multijugador SPI con dos FPGA.
 
-Quedan pendientes o sujetos a integración posterior:
+Sin embargo, para cumplir completamente con los requerimientos del proyecto, todavía quedan pendientes obligatorios:
 
-- uso efectivo de DDR2 desde firmware para datos del juego o recursos gráficos;
-- microSD;
-- temporizador real de 60 Hz;
-- renderizado avanzado de texto o sprites;
-- integración permanente del top de la FPGA esclava dentro de un repositorio/versionado formal, si se desea conservar ese diseño junto al maestro.
+* integrar el uso efectivo de la memoria DDR2 desde firmware;
+* ubicar firmware, datos del juego, framebuffer o recursos gráficos en DDR2 según el mapa de memoria definido;
+* administrar explícitamente regiones de memoria DDR2 desde el firmware;
+* integrar almacenamiento externo mediante microSD;
+* cargar desde microSD recursos gráficos, sprites o configuraciones del juego;
+* conectar el flujo microSD → memoria DDR2/VRAM → renderizado VGA;
+* agregar temporización más estable para el ciclo de juego, idealmente mediante temporizador real de 60 Hz;
+* integrar de forma permanente el diseño de la FPGA esclava dentro de un repositorio versionado, si se desea conservar su implementación junto al maestro.
+
+Por tanto, el sistema ya cumple la base funcional del Pong multijugador y la comunicación SPI, pero todavía requiere cerrar DDR2 y microSD para alinearse completamente con los requisitos obligatorios de la entrega final.
