@@ -10,8 +10,10 @@
 
 /*
  * AXI GPIO input register.
- * The current block design maps axi_gpio_0 at 0x40000000 and exposes
- * INPUT_DRIVER[7:0] as an 8-bit input bus connected to Nexys A7 switches.
+ *
+ * The current block design maps axi_gpio_0 at 0x40000000.
+ * The external physical inputs are conditioned in hardware before reaching
+ * INPUT_DRIVER[7:0].
  */
 #define INPUT_GPIO_DATA_OFFSET 0x00000000U
 
@@ -25,9 +27,6 @@
 #  endif
 #endif
 
-/*
- * Reads the raw input word from AXI GPIO.
- */
 static uint32_t input_read_raw(void)
 {
     volatile uint32_t *gpio_data;
@@ -37,9 +36,6 @@ static uint32_t input_read_raw(void)
     return (*gpio_data) & 0x000000FFU;
 }
 
-/*
- * Converts a raw 32-bit input word into player 1 input.
- */
 player_input_t input_decode_player1(uint32_t raw_input)
 {
     player_input_t input;
@@ -47,14 +43,16 @@ player_input_t input_decode_player1(uint32_t raw_input)
     input.up    = (raw_input & INPUT_BIT_P1_UP)    ? 1U : 0U;
     input.down  = (raw_input & INPUT_BIT_P1_DOWN)  ? 1U : 0U;
     input.start = (raw_input & INPUT_BIT_P1_START) ? 1U : 0U;
-    input.reset = (raw_input & INPUT_BIT_P1_RESET) ? 1U : 0U;
+
+    /*
+     * C12 is now the global hardware reset.
+     * It is not decoded as a game input bit.
+     */
+    input.reset = 0U;
 
     return input;
 }
 
-/*
- * Converts a raw 32-bit input word into player 2 input.
- */
 player_input_t input_decode_player2(uint32_t raw_input)
 {
     player_input_t input;
@@ -62,23 +60,32 @@ player_input_t input_decode_player2(uint32_t raw_input)
     input.up    = (raw_input & INPUT_BIT_P2_UP)    ? 1U : 0U;
     input.down  = (raw_input & INPUT_BIT_P2_DOWN)  ? 1U : 0U;
     input.start = (raw_input & INPUT_BIT_P2_START) ? 1U : 0U;
-    input.reset = (raw_input & INPUT_BIT_P2_RESET) ? 1U : 0U;
+
+    /*
+     * C12 is now the global hardware reset.
+     * It is not decoded as a game input bit.
+     */
+    input.reset = 0U;
 
     return input;
 }
 
-/*
- * Reads player 1 input from the current hardware input register.
- */
 player_input_t input_read_player1(void)
 {
     return input_decode_player1(input_read_raw());
 }
 
-/*
- * Reads player 2 input from the current hardware input register.
- */
 player_input_t input_read_player2(void)
 {
     return input_decode_player2(input_read_raw());
+}
+
+uint8_t input_read_multiplayer_mode(void)
+{
+    return (input_read_raw() & INPUT_BIT_MULTIPLAYER_MODE) ? 1U : 0U;
+}
+
+uint8_t input_read_game_reset(void)
+{
+    return (input_read_raw() & INPUT_BIT_GAME_RESET) ? 1U : 0U;
 }

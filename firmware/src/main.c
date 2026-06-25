@@ -22,6 +22,11 @@ int main(void)
     player_input_t p1;
     player_input_t p2;
     player_input_t p2_remote;
+    uint8_t multiplayer_mode;
+    uint8_t game_reset;
+    uint8_t game_reset_prev;
+
+    game_reset_prev = 0U;
 
     game_app_init(
         &app,
@@ -33,22 +38,40 @@ int main(void)
 
     while (1) {
         p1 = input_read_player1();
-
-        /*
-         * Fallback local:
-         * If there is no valid SPI packet from the slave,
-         * player 2 can still be controlled with local switches.
-         */
         p2 = input_read_player2();
 
         /*
-         * Main SPI transaction:
-         * - MOSI sends current official game state.
-         * - MISO receives remote P2 input.
+         * SW15 selects the operating mode:
+         *
+         * SW15 = 0:
+         *   Solo/local mode. SPI is not used and both paddles are controlled
+         *   from the master FPGA buttons.
+         *
+         * SW15 = 1:
+         *   Multiplayer mode. SPI is enabled and player 2 input is taken
+         *   from the slave FPGA when a valid packet is received.
          */
-        if (spi_game_exchange_state_input(&app.state, &p2_remote)) {
-            p2 = p2_remote;
+        multiplayer_mode = input_read_multiplayer_mode();
+
+        if (multiplayer_mode) {
+            if (spi_game_exchange_state_input(&app.state, &p2_remote)) {
+                p2 = p2_remote;
+            }
         }
+
+        /*
+         * SW0 is a game-level reset.
+         * It is converted into a one-frame pulse on rising edge so the game
+         * resets once when SW0 is moved from 0 to 1.
+         */
+        game_reset = input_read_game_reset();
+
+        if ((game_reset != 0U) && (game_reset_prev == 0U)) {
+            p1.reset = 1U;
+            p2.reset = 1U;
+        }
+
+        game_reset_prev = game_reset;
 
         game_app_update_local(
             &app,
