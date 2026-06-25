@@ -4,6 +4,8 @@
 #include "game/input_driver.h"
 #include "game/pong_renderer.h"
 #include "game/spi_game.h"
+#include "game/ddr2_memory.h"
+#include "vram_memory_map.h"
 
 #define MAIN_LOOP_DELAY_CYCLES 120000U
 
@@ -16,6 +18,21 @@ static void delay_cycles(uint32_t cycles)
     }
 }
 
+static void draw_ddr2_status_indicator(uint8_t ddr2_ok)
+{
+    uint32_t x;
+    uint32_t y;
+    uint16_t color;
+
+    color = ddr2_ok ? VRAM_COLOR_GREEN : VRAM_COLOR_RED;
+
+    for (y = 108U; y < 117U; y++) {
+        for (x = 148U; x < 157U; x++) {
+            vram_write_pixel(x, y, color);
+        }
+    }
+}
+
 int main(void)
 {
     game_app_t app;
@@ -25,8 +42,18 @@ int main(void)
     uint8_t multiplayer_mode;
     uint8_t game_reset;
     uint8_t game_reset_prev;
+    uint8_t ddr2_ok;
 
     game_reset_prev = 0U;
+
+    delay_cycles(2000000U);
+
+    ddr2_ok = ddr2_self_test();
+
+    if (ddr2_ok != 0U) {
+        ddr2_init_game_config();
+        ddr2_init_demo_sprite_bank();
+    }
 
     game_app_init(
         &app,
@@ -34,23 +61,17 @@ int main(void)
         GAME_ROLE_MASTER
     );
 
+    if (ddr2_ok != 0U) {
+        ddr2_store_game_state(&app.state);
+    }
+
     pong_render_state(&app.state);
+    draw_ddr2_status_indicator(ddr2_ok);
 
     while (1) {
         p1 = input_read_player1();
         p2 = input_read_player2();
 
-        /*
-         * SW15 selects the operating mode:
-         *
-         * SW15 = 0:
-         *   Solo/local mode. SPI is not used and both paddles are controlled
-         *   from the master FPGA buttons.
-         *
-         * SW15 = 1:
-         *   Multiplayer mode. SPI is enabled and player 2 input is taken
-         *   from the slave FPGA when a valid packet is received.
-         */
         multiplayer_mode = input_read_multiplayer_mode();
 
         if (multiplayer_mode) {
@@ -59,11 +80,6 @@ int main(void)
             }
         }
 
-        /*
-         * SW0 is a game-level reset.
-         * It is converted into a one-frame pulse on rising edge so the game
-         * resets once when SW0 is moved from 0 to 1.
-         */
         game_reset = input_read_game_reset();
 
         if ((game_reset != 0U) && (game_reset_prev == 0U)) {
@@ -79,7 +95,12 @@ int main(void)
             p2
         );
 
+        if (ddr2_ok != 0U) {
+            ddr2_store_game_state(&app.state);
+        }
+
         pong_render_state(&app.state);
+        draw_ddr2_status_indicator(ddr2_ok);
 
         delay_cycles(MAIN_LOOP_DELAY_CYCLES);
     }
