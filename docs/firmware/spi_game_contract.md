@@ -2,14 +2,14 @@
 
 ## 1. Objetivo
 
-Este documento define el protocolo SPI entre la FPGA maestro y la FPGA esclavo.
+Este documento define el protocolo SPI entre la FPGA maestra y la FPGA esclava.
 
-La FPGA maestro contiene el MicroBlaze y ejecuta la lógica oficial del Pong.
-La FPGA esclavo lee los controles remotos del jugador 2 y recibe el estado oficial del juego.
+La FPGA maestra contiene el MicroBlaze y ejecuta la lógica oficial del Pong.
+La FPGA esclava lee los controles remotos del jugador 2 y recibe el estado oficial del juego.
 
 ## 2. Roles
 
-### FPGA maestro
+### FPGA maestra
 
 - Genera el reloj SPI.
 - Controla la señal CS/SS.
@@ -17,9 +17,9 @@ La FPGA esclavo lee los controles remotos del jugador 2 y recibe el estado ofici
 - Envía el estado oficial por MOSI.
 - Recibe los controles del jugador 2 por MISO.
 
-### FPGA esclavo
+### FPGA esclava
 
-- Espera el reloj y CS del maestro.
+- Espera el reloj y CS de la maestra.
 - Lee sus controles locales.
 - Devuelve el input del jugador 2 por MISO.
 - Recibe el estado oficial del juego por MOSI.
@@ -40,9 +40,9 @@ La FPGA esclavo lee los controles remotos del jugador 2 y recibe el estado ofici
 
 | Maestro | Esclavo | Función |
 |---|---|---|
-| JA1 | CS/SS | Selección del esclavo |
-| JA2 | MOSI/SDI | Estado del maestro hacia esclavo |
-| JA3 | MISO/SDO | Input del esclavo hacia maestro |
+| JA1 | CS/SS | Selección de la esclava |
+| JA2 | MOSI/SDI | Estado de la maestra hacia la esclava |
+| JA3 | MISO/SDO | Input de la esclava hacia la maestra |
 | JA4 | SCLK | Reloj SPI |
 | GND | GND | Tierra común |
 
@@ -50,7 +50,7 @@ No se debe conectar 3.3 V entre placas si ambas FPGA están alimentadas por USB.
 
 ## 5. Transacción principal
 
-En cada frame, el maestro ejecuta una transferencia SPI fija de 24 bytes.
+En cada frame, la maestra ejecuta una transferencia SPI fija de 24 bytes.
 
 Durante esa misma transferencia:
 
@@ -59,9 +59,9 @@ Durante esa misma transferencia:
 
 Esto aprovecha que SPI es full-duplex.
 
-## 6. Paquete MISO: input del esclavo
+## 6. Paquete MISO: input de la esclava
 
-El esclavo debe colocar este paquete en los primeros 7 bytes de MISO.
+La esclava debe colocar este paquete en los primeros 7 bytes de MISO.
 
 | Byte | Campo | Descripción |
 |---:|---|---|
@@ -80,9 +80,9 @@ checksum = byte0 ^ byte1 ^ byte2 ^ byte3 ^ byte4 ^ byte5
 ```
 
 
-## 7. Paquete MOSI: estado oficial del maestro
+## 7. Paquete MOSI: estado oficial de la maestra
 
-El maestro envía 24 bytes por MOSI.
+La maestra envía 24 bytes por MOSI.
 
 | Byte | Campo               |
 | ---: | ------------------- |
@@ -126,19 +126,34 @@ checksum = XOR de byte 0 hasta byte 22
 |     2 | GAME_PAUSED  |
 |     3 | GAME_OVER    |
 
-## 9. Reglas para el esclavo
+## 9. Reglas para la esclava
 
-Antes de cada transacción, el esclavo debe tener listo su paquete de input.
+Antes de cada transacción, la esclava debe tener listo su paquete de input.
 
 Cuando CS baja:
 
-1. El esclavo empieza a recibir bytes por MOSI.
-2. El esclavo transmite su paquete de input por MISO.
+1. La esclava empieza a recibir bytes por MOSI.
+2. La esclava transmite su paquete de input por MISO.
 3. Al terminar la transferencia, valida el paquete recibido.
-4. Si el paquete del maestro es válido, actualiza su estado local.
+4. Si el paquete de la maestra es válido, actualiza su estado local.
 
 ## 10. Regla principal
 
-El maestro siempre manda el estado oficial.
+La maestra siempre manda el estado oficial.
 
-El esclavo nunca decide la física del juego; solo reporta controles.
+La esclava nunca decide la física del juego; solo reporta controles.
+
+## 11. Fuente física de los controles
+
+El contrato SPI no depende directamente de los pines físicos. La trama MISO solo transporta señales lógicas de P2: `up`, `down`, `start` y `reset`.
+
+En la prueba actual con la FPGA esclava, esas señales se generan desde:
+
+| Señal lógica MISO | Control físico esclavo | Pin FPGA |
+| --- | --- | --- |
+| `up` | `BTNR` | M17 |
+| `down` | `BTND` | P18 |
+| `start` | `BTNC` | N17 |
+| `reset` | `SW0` | J15 |
+
+La documentación completa de controles físicos se encuentra en `docs/interfaces/controles_pong.md`.

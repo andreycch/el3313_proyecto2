@@ -2,9 +2,9 @@
 
 ## Propósito
 
-Este documento fija el conector físico y el orden de señales para la comunicación SPI entre la FPGA maestro y la FPGA esclava.
+Este documento fija el conector físico y el orden de señales para la comunicación SPI entre la FPGA maestra y la FPGA esclava.
 
-La decisión permite continuar con la integración del hardware sin esperar una asignación externa de pines. La FPGA de este repositorio actúa como maestro SPI.
+La decisión permite mantener una conexión directa y reproducible entre dos Nexys A7. La FPGA de este repositorio actúa como maestro SPI.
 
 ## Conector elegido
 
@@ -26,7 +26,7 @@ Razones de la elección:
 | `MISO` | `spi_rtl_0_io1_io` | JA3 | E18 | Datos del esclavo hacia el maestro. |
 | `SCLK` | `spi_rtl_0_sck_io` | JA4 | G17 | Reloj SPI generado por el maestro. |
 
-Además, ambas FPGAs deben compartir **GND común** usando un pin GND del mismo Pmod.
+Además, ambas FPGA deben compartir **GND común** usando un pin GND del mismo Pmod.
 
 ## Cableado entre las dos FPGA
 
@@ -62,6 +62,12 @@ io1 = MISO
 
 Si Vivado genera nombres diferentes al crear el wrapper, se deben ajustar únicamente los nombres de los puertos en el archivo `.xdc`, manteniendo el mismo conector físico y el mismo orden de señales.
 
-## Estado pendiente
+## Estado de validación
 
-Esta asignación solo define los pines físicos. Todavía falta implementar en firmware el uso real del periférico `axi_quad_spi_0` y acordar con el grupo esclavo el formato final de los paquetes de entrada y estado.
+Esta asignación ya fue validada en hardware con dos FPGA Nexys A7. En la prueba, la maestra envió el estado oficial del Pong por MOSI y recibió controles de P2 por MISO desde la esclava.
+
+El formato de los paquetes queda documentado en:
+
+```text
+docs/firmware/spi_game_contract.md
+```
