@@ -12,7 +12,6 @@
 #define PONG_COLOR_BALL        VRAM_COLOR_WHITE
 
 #define SCREEN_CENTER_LEFT_X   ((GAME_WIDTH / 2U) - 1U)
-#define SCREEN_CENTER_RIGHT_X  (GAME_WIDTH / 2U)
 
 #define CENTER_LINE_WIDTH      2U
 #define CENTER_DASH_HEIGHT     4U
@@ -28,13 +27,7 @@
 #define SCORE_MAX_WIDTH        ((MAX_SCORE * SCORE_BLOCK_WIDTH) + ((MAX_SCORE - 1U) * SCORE_BLOCK_GAP))
 
 #define SCORE_P1_X             (SCREEN_CENTER_LEFT_X - SCORE_CENTER_GAP - SCORE_MAX_WIDTH + 1U)
-#define SCORE_P2_X             (SCREEN_CENTER_RIGHT_X + SCORE_CENTER_GAP)
-
-#define HUD_CLEAR_Y            1U
-#define HUD_CLEAR_HEIGHT       15U
-
-#define MESSAGE_CLEAR_Y        17U
-#define MESSAGE_CLEAR_HEIGHT   10U
+#define SCORE_P2_X             ((GAME_WIDTH / 2U) + SCORE_CENTER_GAP)
 
 #define WAIT_BAR_WIDTH         28U
 #define WAIT_BAR_HEIGHT        3U
@@ -43,9 +36,6 @@
 #define WIN_BAR_WIDTH          64U
 #define WIN_BAR_HEIGHT         3U
 #define WIN_BAR_Y              20U
-
-static game_state_t previous_state;
-static uint8_t renderer_initialized = 0U;
 
 static void draw_rect(uint32_t x0, uint32_t y0, uint32_t w, uint32_t h, uint16_t color)
 {
@@ -92,25 +82,13 @@ static void draw_center_line(void)
             dash_end = CENTER_LINE_END_Y;
         }
 
-        draw_rect(
-            SCREEN_CENTER_LEFT_X,
-            y,
-            CENTER_LINE_WIDTH,
-            dash_end - y,
-            PONG_COLOR_DIM
-        );
+        draw_rect(SCREEN_CENTER_LEFT_X, y, CENTER_LINE_WIDTH, dash_end - y, PONG_COLOR_DIM);
     }
 }
 
 static void draw_hud_center_divider(void)
 {
-    draw_rect(
-        SCREEN_CENTER_LEFT_X,
-        2U,
-        CENTER_LINE_WIDTH,
-        10U,
-        PONG_COLOR_DIM
-    );
+    draw_rect(SCREEN_CENTER_LEFT_X, 2U, CENTER_LINE_WIDTH, 10U, PONG_COLOR_DIM);
 }
 
 static void draw_score_bar(uint8_t score, uint32_t x0, uint16_t color)
@@ -143,9 +121,6 @@ static uint16_t get_winner_color(const game_state_t *state)
 
 static void draw_hud(const game_state_t *state)
 {
-    draw_rect(1U, HUD_CLEAR_Y, GAME_WIDTH - 2U, HUD_CLEAR_HEIGHT, PONG_COLOR_BACKGROUND);
-    draw_rect(1U, MESSAGE_CLEAR_Y, GAME_WIDTH - 2U, MESSAGE_CLEAR_HEIGHT, PONG_COLOR_BACKGROUND);
-
     draw_score_bar(state->score_p1, SCORE_P1_X, PONG_COLOR_P1);
     draw_score_bar(state->score_p2, SCORE_P2_X, PONG_COLOR_P2);
     draw_hud_center_divider();
@@ -159,63 +134,9 @@ static void draw_hud(const game_state_t *state)
     }
 }
 
-static uint8_t full_redraw_required(const game_state_t *state)
-{
-    if (renderer_initialized == 0U) {
-        return 1U;
-    }
-
-    if (state->score_p1 != previous_state.score_p1) {
-        return 1U;
-    }
-
-    if (state->score_p2 != previous_state.score_p2) {
-        return 1U;
-    }
-
-    if (state->status != previous_state.status) {
-        return 1U;
-    }
-
-    return 0U;
-}
-
-static void erase_dynamic_objects(const game_state_t *state)
-{
-    draw_rect(
-        PADDLE_MARGIN,
-        state->paddle_p1_y,
-        PADDLE_WIDTH,
-        PADDLE_HEIGHT,
-        PONG_COLOR_BACKGROUND
-    );
-
-    draw_rect(
-        GAME_WIDTH - PADDLE_MARGIN - PADDLE_WIDTH,
-        state->paddle_p2_y,
-        PADDLE_WIDTH,
-        PADDLE_HEIGHT,
-        PONG_COLOR_BACKGROUND
-    );
-
-    draw_rect(
-        state->ball_x,
-        state->ball_y,
-        BALL_SIZE,
-        BALL_SIZE,
-        PONG_COLOR_BACKGROUND
-    );
-}
-
 static void draw_dynamic_objects(const game_state_t *state)
 {
-    draw_rect(
-        PADDLE_MARGIN,
-        state->paddle_p1_y,
-        PADDLE_WIDTH,
-        PADDLE_HEIGHT,
-        PONG_COLOR_P1
-    );
+    draw_rect(PADDLE_MARGIN, state->paddle_p1_y, PADDLE_WIDTH, PADDLE_HEIGHT, PONG_COLOR_P1);
 
     draw_rect(
         GAME_WIDTH - PADDLE_MARGIN - PADDLE_WIDTH,
@@ -225,41 +146,15 @@ static void draw_dynamic_objects(const game_state_t *state)
         PONG_COLOR_P2
     );
 
-    draw_rect(
-        state->ball_x,
-        state->ball_y,
-        BALL_SIZE,
-        BALL_SIZE,
-        PONG_COLOR_BALL
-    );
+    draw_rect(state->ball_x, state->ball_y, BALL_SIZE, BALL_SIZE, PONG_COLOR_BALL);
 }
 
 void pong_render_state(const game_state_t *state)
 {
-    if (full_redraw_required(state) != 0U) {
-        vram_clear(PONG_COLOR_BACKGROUND);
+    vram_clear(PONG_COLOR_BACKGROUND);
 
-        draw_border();
-        draw_center_line();
-        draw_hud(state);
-        draw_dynamic_objects(state);
-
-        previous_state = *state;
-        renderer_initialized = 1U;
-        return;
-    }
-
-    erase_dynamic_objects(&previous_state);
-
-    /*
-     * Reparar elementos estáticos que pudieron ser borrados por la bola
-     * o las paletas al pintar fondo negro.
-     */
     draw_border();
     draw_center_line();
     draw_hud(state);
-
     draw_dynamic_objects(state);
-
-    previous_state = *state;
 }

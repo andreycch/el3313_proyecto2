@@ -16,6 +16,9 @@
 
 #define VRAM_PIXEL_BYTES        4u
 
+#define VRAM_SWAP_CONTROL_OFFSET 0x0001FFF8u
+#define VRAM_SWAP_CONTROL_ADDR   (VRAM_BASE_ADDR + VRAM_SWAP_CONTROL_OFFSET)
+
 #define VRAM_RGB444(red, green, blue) \
     ((((uint16_t)(red)   & 0xFu) << 8) | \
      (((uint16_t)(green) & 0xFu) << 4) | \
@@ -47,6 +50,11 @@ static inline void vram_write_pixel(uint32_t x, uint32_t y, uint16_t rgb444)
         pixel_addr = VRAM_BASE_ADDR + (uintptr_t)VRAM_PIXEL_OFFSET(x, y);
         *((volatile uint32_t *)pixel_addr) = ((uint32_t)rgb444) & 0x00000FFFu;
     }
+}
+
+static inline void vram_request_buffer_swap(void)
+{
+    *((volatile uint32_t *)VRAM_SWAP_CONTROL_ADDR) = 0x00000001u;
 }
 
 static inline uint32_t vram_read_pixel(uint32_t x, uint32_t y)

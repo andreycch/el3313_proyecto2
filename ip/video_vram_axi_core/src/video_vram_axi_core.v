@@ -1,16 +1,5 @@
 `default_nettype none
 
-//! @title Núcleo VGA con VRAM escrita por AXI-Lite
-//! @author Grupo Maestro
-//! @brief Integra AXI-Lite, VRAM y generación VGA.
-//!
-//! Este módulo conecta un escritor AXI-Lite con una VRAM de doble puerto.
-//! El puerto AXI-Lite permite escribir pixeles desde un procesador como
-//! MicroBlaze V. El puerto de lectura de la VRAM es usado por la lógica VGA
-//! para generar la imagen en pantalla.
-//!
-//! Este núcleo será la base para la integración procesador -> VRAM -> VGA.
-
 module video_vram_axi_core #(
     parameter C_S_AXI_DATA_WIDTH = 32,
     parameter C_S_AXI_ADDR_WIDTH = 17
@@ -65,9 +54,29 @@ module video_vram_axi_core #(
     wire [14:0] axi_vram_wr_addr;
     wire [11:0] axi_vram_wr_data;
 
+    wire        swap_request;
+
+    reg         front_bank;
+    reg         swap_pending;
+
     assign reset_active_high = ~S_AXI_ARESETN;
 
-    //! @brief Generador de habilitación de pixel.
+    always @(posedge S_AXI_ACLK) begin
+        if (!S_AXI_ARESETN) begin
+            front_bank   <= 1'b0;
+            swap_pending <= 1'b0;
+        end else begin
+            if (swap_request) begin
+                swap_pending <= 1'b1;
+            end
+
+            if (frame_tick && swap_pending) begin
+                front_bank   <= ~front_bank;
+                swap_pending <= 1'b0;
+            end
+        end
+    end
+
     pixel_tick_gen #(
         .DIVISOR(4)
     ) pixel_tick_gen_inst (
@@ -76,7 +85,6 @@ module video_vram_axi_core #(
         .pixel_tick(pixel_tick)
     );
 
-    //! @brief Temporizador VGA 640x480.
     vga_timing vga_timing_inst (
         .clk(S_AXI_ACLK),
         .rst(reset_active_high),
@@ -89,7 +97,6 @@ module video_vram_axi_core #(
         .pixel_y(pixel_y)
     );
 
-    //! @brief Generador de dirección de lectura para VRAM.
     vram_read_addr_gen vram_read_addr_gen_inst (
         .video_active(video_active),
         .pixel_x(pixel_x),
@@ -98,7 +105,6 @@ module video_vram_axi_core #(
         .vram_read_active(vram_read_active)
     );
 
-    //! @brief Interfaz AXI-Lite de escritura hacia VRAM.
     axi_lite_vram_writer #(
         .C_S_AXI_DATA_WIDTH(C_S_AXI_DATA_WIDTH),
         .C_S_AXI_ADDR_WIDTH(C_S_AXI_ADDR_WIDTH),
@@ -133,19 +139,26 @@ module video_vram_axi_core #(
         .S_AXI_RVALID(S_AXI_RVALID),
         .S_AXI_RREADY(S_AXI_RREADY),
 
+        .swap_request(swap_request),
+
         .vram_wr_en(axi_vram_wr_en),
         .vram_wr_addr(axi_vram_wr_addr),
         .vram_wr_data(axi_vram_wr_data)
     );
 
-    //! @brief Memoria de video.
-    vram_dual_port vram_dual_port_inst (
+    vram_dual_port #(
+        .ADDR_WIDTH(15),
+        .DATA_WIDTH(12),
+        .MEMORY_DEPTH(19200)
+    ) vram_dual_port_inst (
         .clk(S_AXI_ACLK),
 
+        .wr_bank(~front_bank),
         .wr_en(axi_vram_wr_en),
         .wr_addr(axi_vram_wr_addr),
         .wr_data(axi_vram_wr_data),
 
+        .rd_bank(front_bank),
         .rd_addr(vram_read_addr),
         .rd_data(vram_read_data)
     );

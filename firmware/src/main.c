@@ -4,6 +4,7 @@
 #include "game/game_app.h"
 #include "game/input_driver.h"
 #include "game/pong_renderer.h"
+#include "game/video_sync.h"
 #include "game/spi_game.h"
 #include "game/ddr2_memory.h"
 #include "game/ddr2_sections.h"
@@ -111,15 +112,15 @@ int main(void)
         ddr2_store_game_state(&g_app.state);
     }
 
-    pong_render_state(&g_app.state);
+            pong_render_state(&g_app.state);
+        vram_request_buffer_swap();
+        input_wait_next_frame();
 
     /*
      * Indicadores:
      * Derecha = prueba lectura/escritura DDR2.
      * Izquierda = secciones enlazadas en DDR2.
      */
-    draw_status_square(148U, 108U, ddr2_ok);
-    draw_status_square(136U, 108U, ddr2_sections_ok);
 
     while (1) {
         p1 = input_read_player1();
@@ -128,6 +129,12 @@ int main(void)
         multiplayer_mode = input_read_multiplayer_mode();
 
         if (multiplayer_mode) {
+            /*
+             * En modo SPI, la barra derecha pertenece a la FPGA esclava.
+             * Por eso se descartan los botones locales M17/P18 del maestro.
+             */
+            p2 = (player_input_t){0};
+
             if (spi_game_exchange_state_input(&g_app.state, &p2_remote)) {
                 p2 = p2_remote;
             }
@@ -153,9 +160,9 @@ int main(void)
         }
 
         pong_render_state(&g_app.state);
-        draw_status_square(148U, 108U, ddr2_ok);
-        draw_status_square(136U, 108U, ddr2_sections_ok);
-
+        vram_request_buffer_swap();
+        input_wait_next_frame();
+        
         delay_cycles(MAIN_LOOP_DELAY_CYCLES);
     }
 

@@ -42,7 +42,34 @@ module system_io_wrapper (
     inout  wire [0:0] spi_rtl_0_ss_io
 );
 
+    wire [7:0] input_driver_conditioned;
     wire [7:0] input_driver_clean;
+    wire       vga_vs_internal;
+
+    reg vga_vs_meta;
+    reg vga_vs_sync;
+    reg vga_vs_prev;
+    reg frame_toggle;
+
+    assign input_driver_clean = {frame_toggle, input_driver_conditioned[6:0]};
+    assign VGA_VS = vga_vs_internal;
+
+    always @(posedge CLK100MHZ) begin
+        if (!CPU_RESETN) begin
+            vga_vs_meta  <= 1'b0;
+            vga_vs_sync  <= 1'b0;
+            vga_vs_prev  <= 1'b0;
+            frame_toggle <= 1'b0;
+        end else begin
+            vga_vs_meta <= vga_vs_internal;
+            vga_vs_sync <= vga_vs_meta;
+            vga_vs_prev <= vga_vs_sync;
+
+            if (vga_vs_sync && !vga_vs_prev) begin
+                frame_toggle <= ~frame_toggle;
+            end
+        end
+    end
 
     input_conditioner u_input_conditioner (
         .clk(CLK100MHZ),
@@ -56,7 +83,7 @@ module system_io_wrapper (
         .sw_multiplayer_raw(SW15),
         .sw_game_reset_raw(SW0),
 
-        .input_driver_o(input_driver_clean)
+        .input_driver_o(input_driver_conditioned)
     );
 
     system_wrapper u_system_wrapper (
@@ -87,7 +114,7 @@ module system_io_wrapper (
         .VGA_G(VGA_G),
         .VGA_HS(VGA_HS),
         .VGA_R(VGA_R),
-        .VGA_VS(VGA_VS),
+        .VGA_VS(vga_vs_internal),
 
         .spi_rtl_0_io0_io(spi_rtl_0_io0_io),
         .spi_rtl_0_io1_io(spi_rtl_0_io1_io),

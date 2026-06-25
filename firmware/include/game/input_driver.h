@@ -14,7 +14,7 @@
  * INPUT_DRIVER[4] = right paddle down
  * INPUT_DRIVER[5] = multiplayer mode
  * INPUT_DRIVER[6] = game reset
- * INPUT_DRIVER[7] = reserved
+ * INPUT_DRIVER[7] = frame toggle from VGA_VS
  *
  * Physical mapping on Nexys A7:
  * - C12  = CPU_RESETN, global active-low reset
@@ -33,6 +33,7 @@
 #define INPUT_BIT_RIGHT_DOWN          0x00000010U
 #define INPUT_BIT_MULTIPLAYER_MODE    0x00000020U
 #define INPUT_BIT_GAME_RESET          0x00000040U
+#define INPUT_BIT_FRAME_TOGGLE        0x00000080U
 
 /*
  * Compatibility aliases.
@@ -60,5 +61,7 @@ player_input_t input_read_player2(void);
  */
 uint8_t input_read_multiplayer_mode(void);
 uint8_t input_read_game_reset(void);
+uint8_t input_read_frame_toggle(void);
+uint32_t input_wait_next_frame(void);
 
 #endif

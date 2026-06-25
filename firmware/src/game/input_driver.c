@@ -16,6 +16,7 @@
  * INPUT_DRIVER[7:0].
  */
 #define INPUT_GPIO_DATA_OFFSET 0x00000000U
+#define INPUT_FRAME_WAIT_TIMEOUT 200000U
 
 #ifndef INPUT_DRIVER_BASE_ADDR
 #  ifdef XPAR_INPUT_DRIVER_BASEADDR
@@ -88,4 +89,25 @@ uint8_t input_read_multiplayer_mode(void)
 uint8_t input_read_game_reset(void)
 {
     return (input_read_raw() & INPUT_BIT_GAME_RESET) ? 1U : 0U;
+}
+
+
+uint8_t input_read_frame_toggle(void)
+{
+    return (input_read_raw() & INPUT_BIT_FRAME_TOGGLE) ? 1U : 0U;
+}
+
+uint32_t input_wait_next_frame(void)
+{
+    uint8_t frame_now;
+    uint32_t timeout;
+
+    frame_now = input_read_frame_toggle();
+    timeout = INPUT_FRAME_WAIT_TIMEOUT;
+
+    while ((input_read_frame_toggle() == frame_now) && (timeout > 0U)) {
+        timeout--;
+    }
+
+    return timeout;
 }
