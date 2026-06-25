@@ -47,3 +47,29 @@ Actualmente la DDR2 se usa desde firmware para:
 ## Pendiente
 
 El firmware todavía no se ejecuta completamente desde DDR2. La integración actual valida acceso funcional a DDR2 desde C, pero queda pendiente mover secciones del linker script hacia DDR2 si se desea cumplir de forma más estricta el requisito de almacenar firmware en memoria externa.
+
+## Secciones enlazadas en DDR2
+
+Además del acceso por direcciones absolutas, el firmware define secciones específicas en el linker script para ubicar datos directamente en DDR2:
+
+| Sección | Uso |
+| --- | --- |
+| `.ddr2_rodata` | Recursos constantes, como sprites o patrones gráficos |
+| `.ddr2_data` | Datos inicializados que se deseen ubicar en DDR2 |
+| `.ddr2_bss` | Variables y estructuras no inicializadas ubicadas en DDR2 |
+
+En la validación actual se ubicaron correctamente:
+
+| Sección | Dirección observada | Contenido |
+| --- | ---: | --- |
+| `.ddr2_rodata` | `0x80000000` | Sprite demo de 8x8 pixeles |
+| `.ddr2_bss` | `0x80000080` | Estructura principal `game_app_t` |
+
+La salida VGA muestra dos indicadores:
+
+| Indicador | Significado |
+| --- | --- |
+| Cuadro derecho verde | La prueba de lectura/escritura DDR2 pasó |
+| Cuadro izquierdo verde | Las secciones enlazadas en DDR2 están dentro del rango del MIG |
+
+Con esta fase, la DDR2 ya se utiliza para almacenar datos reales del firmware, incluyendo recursos gráficos y estructuras del juego.

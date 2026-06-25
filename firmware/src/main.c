@@ -1,13 +1,28 @@
 #include <stdint.h>
+#include <stddef.h>
 
 #include "game/game_app.h"
 #include "game/input_driver.h"
 #include "game/pong_renderer.h"
 #include "game/spi_game.h"
 #include "game/ddr2_memory.h"
+#include "game/ddr2_sections.h"
 #include "vram_memory_map.h"
 
 #define MAIN_LOOP_DELAY_CYCLES 120000U
+
+static game_app_t g_app DDR2_BSS_SECTION;
+
+static const uint16_t g_demo_sprite_resource[64] DDR2_RODATA_SECTION = {
+    0x0F0, 0x00F, 0x0F0, 0x00F, 0x0F0, 0x00F, 0x0F0, 0x00F,
+    0x00F, 0x0F0, 0x00F, 0x0F0, 0x00F, 0x0F0, 0x00F, 0x0F0,
+    0x0F0, 0x00F, 0x0F0, 0x00F, 0x0F0, 0x00F, 0x0F0, 0x00F,
+    0x00F, 0x0F0, 0x00F, 0x0F0, 0x00F, 0x0F0, 0x00F, 0x0F0,
+    0x0F0, 0x00F, 0x0F0, 0x00F, 0x0F0, 0x00F, 0x0F0, 0x00F,
+    0x00F, 0x0F0, 0x00F, 0x0F0, 0x00F, 0x0F0, 0x00F, 0x0F0,
+    0x0F0, 0x00F, 0x0F0, 0x00F, 0x0F0, 0x00F, 0x0F0, 0x00F,
+    0x00F, 0x0F0, 0x00F, 0x0F0, 0x00F, 0x0F0, 0x00F, 0x0F0
+};
 
 static void delay_cycles(uint32_t cycles)
 {
@@ -18,24 +33,49 @@ static void delay_cycles(uint32_t cycles)
     }
 }
 
-static void draw_ddr2_status_indicator(uint8_t ddr2_ok)
+static void draw_status_square(uint32_t x0, uint32_t y0, uint8_t ok)
 {
     uint32_t x;
     uint32_t y;
     uint16_t color;
 
-    color = ddr2_ok ? VRAM_COLOR_GREEN : VRAM_COLOR_RED;
+    color = ok ? VRAM_COLOR_GREEN : VRAM_COLOR_RED;
 
-    for (y = 108U; y < 117U; y++) {
-        for (x = 148U; x < 157U; x++) {
+    for (y = y0; y < (y0 + 9U); y++) {
+        for (x = x0; x < (x0 + 9U); x++) {
             vram_write_pixel(x, y, color);
         }
     }
 }
 
+static uint8_t ddr2_pointer_in_range(const void *ptr)
+{
+    uintptr_t addr;
+
+    addr = (uintptr_t)ptr;
+
+    if (addr < DDR2_BASE_ADDR) {
+        return 0U;
+    }
+
+    if (addr >= DDR2_LIMIT_ADDR) {
+        return 0U;
+    }
+
+    return 1U;
+}
+
+static void copy_demo_sprite_resource_to_ddr2_bank(void)
+{
+    ddr2_copy_to(
+        DDR2_SPRITE_BANK_ADDR,
+        g_demo_sprite_resource,
+        sizeof(g_demo_sprite_resource)
+    );
+}
+
 int main(void)
 {
-    game_app_t app;
     player_input_t p1;
     player_input_t p2;
     player_input_t p2_remote;
@@ -43,6 +83,7 @@ int main(void)
     uint8_t game_reset;
     uint8_t game_reset_prev;
     uint8_t ddr2_ok;
+    uint8_t ddr2_sections_ok;
 
     game_reset_prev = 0U;
 
@@ -50,23 +91,35 @@ int main(void)
 
     ddr2_ok = ddr2_self_test();
 
+    ddr2_sections_ok =
+        ddr2_pointer_in_range(&g_app) &&
+        ddr2_pointer_in_range(g_demo_sprite_resource);
+
     if (ddr2_ok != 0U) {
         ddr2_init_game_config();
         ddr2_init_demo_sprite_bank();
+        copy_demo_sprite_resource_to_ddr2_bank();
     }
 
     game_app_init(
-        &app,
+        &g_app,
         GAME_MODE_LOCAL,
         GAME_ROLE_MASTER
     );
 
     if (ddr2_ok != 0U) {
-        ddr2_store_game_state(&app.state);
+        ddr2_store_game_state(&g_app.state);
     }
 
-    pong_render_state(&app.state);
-    draw_ddr2_status_indicator(ddr2_ok);
+    pong_render_state(&g_app.state);
+
+    /*
+     * Indicadores:
+     * Derecha = prueba lectura/escritura DDR2.
+     * Izquierda = secciones enlazadas en DDR2.
+     */
+    draw_status_square(148U, 108U, ddr2_ok);
+    draw_status_square(136U, 108U, ddr2_sections_ok);
 
     while (1) {
         p1 = input_read_player1();
@@ -75,7 +128,7 @@ int main(void)
         multiplayer_mode = input_read_multiplayer_mode();
 
         if (multiplayer_mode) {
-            if (spi_game_exchange_state_input(&app.state, &p2_remote)) {
+            if (spi_game_exchange_state_input(&g_app.state, &p2_remote)) {
                 p2 = p2_remote;
             }
         }
@@ -90,17 +143,18 @@ int main(void)
         game_reset_prev = game_reset;
 
         game_app_update_local(
-            &app,
+            &g_app,
             p1,
             p2
         );
 
         if (ddr2_ok != 0U) {
-            ddr2_store_game_state(&app.state);
+            ddr2_store_game_state(&g_app.state);
         }
 
-        pong_render_state(&app.state);
-        draw_ddr2_status_indicator(ddr2_ok);
+        pong_render_state(&g_app.state);
+        draw_status_square(148U, 108U, ddr2_ok);
+        draw_status_square(136U, 108U, ddr2_sections_ok);
 
         delay_cycles(MAIN_LOOP_DELAY_CYCLES);
     }
