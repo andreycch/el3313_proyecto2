@@ -50,7 +50,7 @@ static int spi_game_init_hw(void)
 #ifdef SDT
     XSpi_Config *config;
 
-    config = XSpi_LookupConfig((UINTPTR)XPAR_XSPI_0_BASEADDR);
+    config = XSpi_LookupConfig((UINTPTR)XPAR_SPI_0_BASEADDR);
     if (config == NULL) {
         return XST_FAILURE;
     }

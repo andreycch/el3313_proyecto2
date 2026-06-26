@@ -40,7 +40,13 @@ module system_io_wrapper (
     inout  wire spi_rtl_0_io1_io,
     inout  wire spi_rtl_0_sck_io,
     inout  wire [0:0] spi_rtl_0_ss_io
-);
+,
+    inout wire SD_SCK,
+    inout wire SD_CMD,
+    inout wire SD_DAT0,
+    inout wire SD_DAT3,
+    output wire SD_RESET,
+    input wire SD_CD);
 
     wire [7:0] input_driver_conditioned;
     wire [7:0] input_driver_clean;
@@ -120,6 +126,13 @@ module system_io_wrapper (
         .spi_rtl_0_io1_io(spi_rtl_0_io1_io),
         .spi_rtl_0_sck_io(spi_rtl_0_sck_io),
         .spi_rtl_0_ss_io(spi_rtl_0_ss_io)
-    );
+    
+        ,
+        .spi_sd_rtl_0_io0_io(SD_CMD),
+        .spi_sd_rtl_0_io1_io(SD_DAT0),
+        .spi_sd_rtl_0_sck_io(SD_SCK),
+        .spi_sd_rtl_0_ss_io(SD_DAT3));
+
+assign SD_RESET = 1'b1;
 
 endmodule
