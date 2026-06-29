@@ -28,13 +28,24 @@ fi
 
 LIB="$(dirname "$LIBXIL")"
 
-SPEC="$(find "$PLAT" -name Xilinx.spec -print -quit)"
+SPEC="$(find "$PLAT" -name Xilinx.spec -print -quit 2>/dev/null || true)"
+
 if [ -z "$SPEC" ]; then
-    SPEC="$(find "$OLD_PLAT" -name Xilinx.spec -print -quit)"
+    SPEC="$(find "$OLD_PLAT" -name Xilinx.spec -print -quit 2>/dev/null || true)"
 fi
 
 if [ -z "$SPEC" ]; then
-    echo "ERROR: no encontré Xilinx.spec ni en plataforma nueva ni vieja"
+    SPEC="$(find "$VITIS" -name Xilinx.spec -print -quit 2>/dev/null || true)"
+fi
+
+if [ -z "$SPEC" ]; then
+    SPEC="$(find "$HOME/.local/share/Trash" -name Xilinx.spec -print -quit 2>/dev/null || true)"
+fi
+
+if [ -z "$SPEC" ]; then
+    echo "ERROR: no encontré Xilinx.spec"
+    echo "Revisá con:"
+    echo "  find workspace /tools/Xilinx/vitisproyecto ~/.local/share/Trash -name Xilinx.spec -type f 2>/dev/null"
     exit 1
 fi
 
