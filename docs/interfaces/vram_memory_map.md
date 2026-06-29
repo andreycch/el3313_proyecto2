@@ -33,7 +33,6 @@ Cada pixel usa 12 bits:
 | [7:4]  | Verde |
 | [3:0]  | Azul  |
 
-
 ## Dirección interna de hardware
 
 La VRAM usa una dirección lineal:
@@ -96,19 +95,25 @@ VRAM_BASE_ADDR = 0x00020000
 
 ## Mapa general de memoria relevante
 
-| Rango                         | Uso                                        |
-| ----------------------------- | ------------------------------------------ |
-| 0x00000000 - 0x0001FFFF       | Memoria local BRAM del MicroBlaze V        |
-| 0x00020000 - 0x0003FFFF       | `video_vram_axi_core_0` / VRAM por AXI     |
-| Dirección asignada por Vivado | `axi_gpio_0` / entrada `INPUT_DRIVER[7:0]` |
+| Rango                   | Uso                                        |
+| ----------------------- | ------------------------------------------ |
+| 0x00000000 - 0x0001FFFF | Memoria local BRAM del MicroBlaze V        |
+| 0x00020000 - 0x0003FFFF | `video_vram_axi_core_0` / VRAM por AXI     |
+| 0x40000000 - 0x4000FFFF | `axi_gpio_0` / entrada `INPUT_DRIVER[7:0]` |
+| 0x40600000 - 0x4060FFFF | `axi_uartlite_0`                           |
+| 0x44A00000 - 0x44A0FFFF | `axi_quad_spi_0`                           |
+| 0x80000000 - 0x87FFFFFF | `mig_7series_0` / DDR2 externa             |
 
-La dirección exacta del AXI GPIO debe consultarse en el `xparameters.h` generado por Vitis. Normalmente aparece como una macro similar a:
+Las direcciones exactas deben consultarse en el `xparameters.h` generado por Vitis después de exportar el `.xsa`. Normalmente aparecen como macros similares a:
 
 ```c
 XPAR_AXI_GPIO_0_BASEADDR
+XPAR_AXI_QUAD_SPI_0_BASEADDR
+XPAR_AXI_UARTLITE_0_BASEADDR
+XPAR_MIG_7SERIES_0_BASEADDR
 ```
 
-## Interfaz INPUT_DRIVER[7:0]
+## Interfaz `INPUT_DRIVER[7:0]`
 
 El diseño integra un bloque `AXI GPIO` configurado como entrada de 8 bits:
 
@@ -118,24 +123,22 @@ El diseño integra un bloque `AXI GPIO` configurado como entrada de 8 bits:
 | Tipo               | AXI GPIO            |
 | Dirección del GPIO | Entrada             |
 | Ancho              | 8 bits              |
-| Puerto externo     | `INPUT_DRIVER[7:0]` |
+| Puerto lógico      | `INPUT_DRIVER[7:0]` |
 
-El puerto externo se conectó en constraints a switches físicos de la Nexys A7:
+En el top actual, el puerto lógico `INPUT_DRIVER[7:0]` no se conecta directamente a switches físicos. Primero se usa `system_io_wrapper`, que instancia `input_conditioner` para sincronizar y filtrar las entradas mediante `sync_2ff` y `debounce`.
 
-| Señal             | Entrada |
-| ----------------- | ------- |
-| `INPUT_DRIVER[0]` | SW0     |
-| `INPUT_DRIVER[1]` | SW1     |
-| `INPUT_DRIVER[2]` | SW2     |
-| `INPUT_DRIVER[3]` | SW3     |
-| `INPUT_DRIVER[4]` | SW4     |
-| `INPUT_DRIVER[5]` | SW5     |
-| `INPUT_DRIVER[6]` | SW6     |
-| `INPUT_DRIVER[7]` | SW7     |
+| Señal lógica | Entrada física | Pin FPGA | Función |
+| --- | --- | --- | --- |
+| `INPUT_DRIVER[0]` | `BTNU` | M18 | Barra izquierda arriba |
+| `INPUT_DRIVER[1]` | `BTNL` | P17 | Barra izquierda abajo |
+| `INPUT_DRIVER[2]` | `BTNC` | N17 | Start |
+| `INPUT_DRIVER[3]` | `BTNR` | M17 | Barra derecha arriba |
+| `INPUT_DRIVER[4]` | `BTND` | P18 | Barra derecha abajo |
+| `INPUT_DRIVER[5]` | `SW15` | V10 | Selector de modo multijugador |
+| `INPUT_DRIVER[6]` | `SW0` | J15 | Reset de partida |
+| `INPUT_DRIVER[7]` | No usado | - | Reservado |
 
-Estos switches no generan una acción visible por sí solos. El firmware debe leer el AXI GPIO y decidir cómo interpretar cada bit.
-
-
+`C12 / CPU_RESETN` no forma parte de `INPUT_DRIVER[7:0]`; es el reset global del sistema.
 
 ## Relación con módulos RTL e IP
 
@@ -148,6 +151,10 @@ Estos switches no generan una acción visible por sí solos. El firmware debe le
 | `axi_lite_vram_writer.v`     | Permite escritura en VRAM desde AXI-Lite                   |
 | `video_vram_axi_core.v`      | IP principal que integra AXI-Lite, VRAM y salida VGA       |
 | `axi_gpio_0`                 | Entrada AXI GPIO de 8 bits para `INPUT_DRIVER[7:0]`        |
+| `system_io_wrapper.v`        | Top superior que acondiciona entradas físicas y conecta el wrapper del BD |
+| `input_conditioner.v`        | Sincroniza y filtra botones/switches antes del AXI GPIO    |
+| `sync_2ff.v`                 | Sincronizador de dos flip-flops para entradas asíncronas   |
+| `debounce.v`                 | Filtro de rebote por contador                              |
 
 ## Estado de integración
 
@@ -158,5 +165,8 @@ La integración actual incluye:
 * VRAM accesible por AXI.
 * Controlador VGA.
 * AXI GPIO de entrada de 8 bits.
-* Puerto externo `INPUT_DRIVER[7:0]`.
+* Acondicionamiento de controles físicos por `system_io_wrapper`.
 * Salidas VGA `VGA_R`, `VGA_G`, `VGA_B`, `VGA_HS` y `VGA_VS`.
+* MIG DDR2 mapeado en el espacio de datos del procesador.
+* AXI Quad SPI mapeado en el espacio de datos del procesador.
+* AXI UARTLite mapeado en el espacio de datos del procesador.
