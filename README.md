@@ -130,6 +130,33 @@ Latencia visual estimada ≈ 0 ms a 16.67 ms
 
 En modo multijugador existe una latencia adicional asociada al intercambio SPI. Esta latencia depende de la frecuencia SPI, del tamaño de la trama transmitida y del momento del ciclo de juego en que se actualicen los datos. Para una medición exacta sería necesario instrumentar el sistema con una señal GPIO de depuración y medirla con osciloscopio o analizador lógico.
 
+## Latencia entre las 2 FPGAs
+
+- El enlace SPI trabaja con `SCK = 6.25 MHz`, por lo que cada bit dura **160 ns**.
+- Un paquete de `24 bytes = 192 bits` tarda teóricamente:
+
+```text
+192 × 160 ns = 30.7 µs
+```
+
+- En la práctica, por el overhead del driver, FIFO, `CS` y sondeo por software, la transacción SPI ronda:
+
+```text
+≈ 40–55 µs
+```
+
+### Latencia percibida
+
+Aunque la comunicación SPI es muy rápida, la latencia que realmente se siente depende del refresco de video:
+
+- `vsync = 60 Hz`
+- 1 frame dura **16.67 ms**
+- El input del jugador 2 puede reflejarse en **1 a 2 frames**
+
+```text
+≈ 16.7 ms – 33 ms
+```
+
 ## Reporte de recursos
 
 Los recursos utilizados fueron obtenidos desde el reporte de utilización generado por Vivado para el bitstream final del sistema maestro.
@@ -239,18 +266,27 @@ config.bin
 sprites.bin
 ```
 
+
 Estos archivos representan el punto probado y estable de la FPGA maestra.
 
-## Enlace a la conversacion con ChatGPT
+## Enlaces de interes
+
+### Enlace a la conversacion con ChatGPT
 ```text
 https://chatgpt.com/share/6a42c87b-8cfc-83e8-a823-677156f10351
 ```
 
-## Enlace al repositorio maestro
+### Enlace al repositorio maestro
 ```text
 https://github.com/andreycch/el3313_proyecto2.git
 ```
-## Enlace al repositorio maestro
+
+### Enlace al repositorio esclavo
 ```text
 https://github.com/nicolecr71/Proyecto-Final
+```
+
+### Enlace al video explicativo del sistema
+```text
+https://youtu.be/ioy0nAySmRk
 ```
